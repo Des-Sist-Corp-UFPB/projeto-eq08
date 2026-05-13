@@ -31,65 +31,86 @@
     <!-- Nome do produto -->
     <td>
         <span class="fw-semibold" th:text="${produto.nome}">Nome do Produto</span>
+        <span th:if="${produto.perecivel}" class="badge bg-warning text-dark ms-1 small" title="Perecível">P</span>
     </td>
 
-    <!-- Descrição (truncada se muito longa) -->
+    <!-- Categoria -->
     <td>
-        <span th:if="${produto.descricao != null and !produto.descricao.isEmpty()}"
-              th:text="${#strings.abbreviate(produto.descricao, 80)}"
-              th:title="${produto.descricao}"
-              class="text-muted small">
-            Descrição do produto...
-        </span>
-        <span th:unless="${produto.descricao != null and !produto.descricao.isEmpty()}"
-              class="text-muted fst-italic small">
-            Sem descrição
-        </span>
+        <span class="badge bg-light text-dark border" th:text="${produto.categoria.descricao}">Insumo</span>
     </td>
 
-    <!-- Preço formatado como moeda brasileira -->
+    <!-- Unidade -->
+    <td>
+        <span th:text="${produto.unidadeMedida}">KG</span>
+    </td>
+
+    <!-- Estoque Atual -->
+    <td class="text-center">
+        <th:block th:with="saldo=${estoqueService.getSaldoEstoque(produto.id)}">
+            <span class="badge" 
+                  th:classappend="${saldo < produto.estoqueMinimo} ? 'bg-danger' : 'bg-info text-dark'"
+                  th:text="${#numbers.formatDecimal(saldo, 1, 'POINT', 2, 'COMMA')}">
+                0,00
+            </span>
+            <small class="d-block text-muted" style="font-size: 0.7rem;" 
+                   th:if="${saldo < produto.estoqueMinimo}">
+                Abaixo do mín (<span th:text="${produto.estoqueMinimo}">0</span>)
+            </small>
+        </th:block>
+    </td>
+
+    <!-- Preço formatado -->
     <td class="text-end">
-        <span class="badge bg-success fs-6">
-            <!--
-              #numbers.formatDecimal: utilitário Thymeleaf para formatação numérica.
-              Parâmetros: valor, mínimo de dígitos inteiros, separador de milhar, casas decimais, separador decimal.
-              Resultado: R$ 1.234,56
-            -->
-            R$ <span th:text="${#numbers.formatDecimal(produto.preco, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+        <span th:if="${produto.precoVenda != null}" class="badge bg-success-subtle text-success border border-success-subtle fs-6">
+            R$ <span th:text="${#numbers.formatDecimal(produto.precoVenda, 1, 'POINT', 2, 'COMMA')}">0,00</span>
         </span>
+        <span th:unless="${produto.precoVenda != null}" class="text-muted small">---</span>
     </td>
 
     <!-- Botões de ação -->
     <td class="text-center">
-        <div class="btn-group btn-group-sm" role="group" aria-label="Ações">
+        <div class="btn-group btn-group-sm" role="group">
 
-            <!--
-              Botão Editar — HTMX carrega o formulário preenchido no modal.
+            <!-- Botão Movimentar (Entrada/Saída) -->
+            <button type="button"
+                    class="btn btn-outline-success"
+                    th:attr="hx-get='/estoque/movimentar/' + ${produto.id}"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                    title="Registrar entrada/saída">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-arrow-left-right" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5m14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5"/>
+                </svg>
+            </button>
 
-              hx-get="/produtos/{id}/editar"  → busca o fragmento do formulário com os dados do produto
-              hx-target="#modal-container"    → insere no container do modal (definido no layout)
-              hx-swap="innerHTML"             → substitui o conteúdo do container
-            -->
+            <!-- Botão Ficha Técnica (Apenas para Produtos Finais) -->
+            <button th:if="${produto.categoria.name() == 'PRODUTO_FINAL'}"
+                    type="button"
+                    class="btn btn-outline-dark"
+                    th:attr="hx-get='/produtos/' + ${produto.id} + '/ficha-tecnica'"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                    title="Ficha Técnica / Receita">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-journal-text" viewBox="0 0 16 16">
+                    <path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
+                    <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
+                    <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
+                </svg>
+            </button>
+
+            <!-- Botão Editar -->
             <button type="button"
                     class="btn btn-outline-primary"
                     th:attr="hx-get='/produtos/' + ${produto.id} + '/editar'"
                     hx-target="#modal-container"
                     hx-swap="innerHTML"
                     title="Editar produto">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
-                     class="bi bi-pencil" viewBox="0 0 16 16">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
                     <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
                 </svg>
             </button>
 
-            <!--
-              Botão Excluir — HTMX envia DELETE e remove a linha da tabela.
-
-              hx-delete="/produtos/{id}"      → envia requisição DELETE para o endpoint
-              hx-target="#produto-{id}"       → alvo é a própria linha (this tr)
-              hx-swap="outerHTML"             → substitui o elemento inteiro (com body vazio = remove)
-              hx-confirm                      → exibe diálogo de confirmação nativo do browser
-            -->
+            <!-- Botão Excluir -->
             <button type="button"
                     class="btn btn-outline-danger"
                     th:attr="hx-delete='/produtos/' + ${produto.id},
@@ -97,8 +118,7 @@
                              hx-confirm='Confirma a exclusão do produto &quot;' + ${produto.nome} + '&quot;?'"
                     hx-swap="outerHTML"
                     title="Excluir produto">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
-                     class="bi bi-trash" viewBox="0 0 16 16">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                     <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
                     <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
                 </svg>

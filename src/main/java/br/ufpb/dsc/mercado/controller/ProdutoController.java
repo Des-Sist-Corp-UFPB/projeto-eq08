@@ -3,6 +3,7 @@ package br.ufpb.dsc.mercado.controller;
 import br.ufpb.dsc.mercado.domain.Produto;
 import br.ufpb.dsc.mercado.dto.ProdutoForm;
 import br.ufpb.dsc.mercado.exception.ProdutoNaoEncontradoException;
+import br.ufpb.dsc.mercado.service.EstoqueService;
 import br.ufpb.dsc.mercado.service.ProdutoService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -49,9 +50,11 @@ public class ProdutoController {
     private static final String HEADER_HTMX = "HX-Request";
 
     private final ProdutoService produtoService;
+    private final EstoqueService estoqueService;
 
-    public ProdutoController(ProdutoService produtoService) {
+    public ProdutoController(ProdutoService produtoService, EstoqueService estoqueService) {
         this.produtoService = produtoService;
+        this.estoqueService = estoqueService;
     }
 
     // =========================================================================
@@ -84,9 +87,9 @@ public class ProdutoController {
         model.addAttribute("produtos", produtos);
         model.addAttribute("busca", busca);
         model.addAttribute("paginaAtual", pagina);
+        model.addAttribute("estoqueService", estoqueService);
 
         // Se for requisição HTMX, retorna apenas o fragmento da tabela (mais eficiente)
-        // O HTMX substitui apenas o elemento alvo, sem recarregar toda a página
         if (htmx != null) {
             return "produtos/fragments/tabela :: tabela";
         }
@@ -138,9 +141,10 @@ public class ProdutoController {
      */
     @GetMapping("/novo")
     public String novoForm(Model model) {
-        // Passa um form vazio para o Thymeleaf vincular com th:object
-        model.addAttribute("form", new ProdutoForm(null, null, null));
-        model.addAttribute("produto", null); // sem produto = modo criação
+        model.addAttribute("form", new ProdutoForm(null, null, null, br.ufpb.dsc.mercado.domain.UnidadeMedida.UN, br.ufpb.dsc.mercado.domain.CategoriaProduto.INSUMO, false, java.math.BigDecimal.ZERO));
+        model.addAttribute("produto", null);
+        model.addAttribute("unidades", br.ufpb.dsc.mercado.domain.UnidadeMedida.values());
+        model.addAttribute("categorias", br.ufpb.dsc.mercado.domain.CategoriaProduto.values());
         return "produtos/fragments/form :: modal";
     }
 
@@ -159,10 +163,19 @@ public class ProdutoController {
     @GetMapping("/{id}/editar")
     public String editarForm(@PathVariable Long id, Model model) {
         Produto produto = produtoService.buscarPorId(id);
-        // Converte entidade para form (preenche os campos do formulário)
-        ProdutoForm form = new ProdutoForm(produto.getNome(), produto.getDescricao(), produto.getPreco());
+        ProdutoForm form = new ProdutoForm(
+                produto.getNome(), 
+                produto.getDescricao(), 
+                produto.getPrecoVenda(), 
+                produto.getUnidadeMedida(), 
+                produto.getCategoria(), 
+                produto.isPerecivel(), 
+                produto.getEstoqueMinimo()
+        );
         model.addAttribute("form", form);
-        model.addAttribute("produto", produto); // com produto = modo edição
+        model.addAttribute("produto", produto);
+        model.addAttribute("unidades", br.ufpb.dsc.mercado.domain.UnidadeMedida.values());
+        model.addAttribute("categorias", br.ufpb.dsc.mercado.domain.CategoriaProduto.values());
         return "produtos/fragments/form :: modal";
     }
 
@@ -198,6 +211,8 @@ public class ProdutoController {
         // Se houver erros de validação, retorna o formulário com as mensagens de erro
         if (bindingResult.hasErrors()) {
             model.addAttribute("produto", null);
+            model.addAttribute("unidades", br.ufpb.dsc.mercado.domain.UnidadeMedida.values());
+            model.addAttribute("categorias", br.ufpb.dsc.mercado.domain.CategoriaProduto.values());
             return "produtos/fragments/form :: modal";
         }
 
@@ -237,9 +252,10 @@ public class ProdutoController {
             Model model) {
 
         if (bindingResult.hasErrors()) {
-            // Recarrega o produto para o formulário saber que está em modo edição
             Produto produto = produtoService.buscarPorId(id);
             model.addAttribute("produto", produto);
+            model.addAttribute("unidades", br.ufpb.dsc.mercado.domain.UnidadeMedida.values());
+            model.addAttribute("categorias", br.ufpb.dsc.mercado.domain.CategoriaProduto.values());
             return "produtos/fragments/form :: modal";
         }
 

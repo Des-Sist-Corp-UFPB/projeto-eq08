@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<th:block th:fragment="modal">
+    <div class="modal fade" id="fichaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">
+                        Ficha Técnica: <span th:text="${produto.nome}">Pizza</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <!-- Formulário de adição de insumo -->
+                    <form hx-post="" 
+                          th:attr="hx-post='/produtos/' + ${produto.id} + '/ficha-tecnica'"
+                          hx-target="#modal-container"
+                          class="row g-2 mb-4">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-bold">Insumo</label>
+                            <select name="insumoId" class="form-select form-select-sm" required>
+                                <option value="">Selecione um ingrediente...</option>
+                                <option th:each="ins : ${insumos}" th:value="${ins.id}" th:text="${ins.nome} + ' (' + ${ins.unidadeMedida} + ')'"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Qtd.</label>
+                            <input type="number" name="quantidade" class="form-control form-control-sm" step="0.01" min="0.01" required />
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">Add</button>
+                        </div>
+                    </form>
+
+                    <!-- Lista de ingredientes atuais -->
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Ingrediente</th>
+                                    <th class="text-center">Quantidade</th>
+                                    <th class="text-center">Unidade</th>
+                                    <th class="text-center">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${itens}">
+                                    <td th:text="${item.insumo.nome}">Queijo</td>
+                                    <td class="text-center" th:text="${#numbers.formatDecimal(item.quantidade, 1, 'POINT', 2, 'COMMA')}">100</td>
+                                    <td class="text-center" th:text="${item.insumo.unidadeMedida}">G</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-link btn-sm text-danger p-0"
+                                                th:attr="hx-delete='/produtos/' + ${produto.id} + '/ficha-tecnica/' + ${item.id}"
+                                                hx-target="#modal-container"
+                                                hx-confirm="Remover este ingrediente?">
+                                            Remover
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr th:if="${itens.empty}">
+                                    <td colspan="4" class="text-center text-muted py-3 small">Nenhum ingrediente cadastrado.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+
+</body>
+</html>

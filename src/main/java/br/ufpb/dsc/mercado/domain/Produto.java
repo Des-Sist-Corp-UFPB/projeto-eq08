@@ -67,20 +67,32 @@ public class Produto {
     @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
 
+    @NotNull(message = "A unidade de medida é obrigatória")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unidade_medida", nullable = false, length = 20)
+    private UnidadeMedida unidadeMedida = UnidadeMedida.UN;
+
+    @NotNull(message = "A categoria é obrigatória")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "categoria", nullable = false, length = 30)
+    private CategoriaProduto categoria = CategoriaProduto.INSUMO;
+
+    @Column(name = "perecivel", nullable = false)
+    private boolean perecivel = false;
+
+    @NotNull(message = "O estoque mínimo é obrigatório")
+    @DecimalMin(value = "0.00", message = "O estoque mínimo não pode ser negativo")
+    @Column(name = "estoque_minimo", nullable = false, precision = 10, scale = 2)
+    private BigDecimal estoqueMinimo = BigDecimal.ZERO;
+
     /**
-     * Preço do produto com precisão decimal.
-     *
-     * <p>{@code BigDecimal} é o tipo correto para valores monetários em Java.
-     * Nunca use {@code float} ou {@code double} para dinheiro — eles têm imprecisão de ponto flutuante.
-     *
-     * <p>{@code precision = 10, scale = 2} significa: até 10 dígitos no total, sendo 2 decimais.
-     * Ex.: 99999999.99 é o valor máximo.
+     * Preço de venda do produto.
+     * Opcional para insumos.
      */
-    @NotNull(message = "O preço é obrigatório")
     @DecimalMin(value = "0.00", message = "O preço não pode ser negativo")
     @Digits(integer = 8, fraction = 2, message = "Preço deve ter no máximo 8 dígitos inteiros e 2 decimais")
-    @Column(name = "preco", nullable = false, precision = 10, scale = 2)
-    private BigDecimal preco;
+    @Column(name = "preco_venda", precision = 10, scale = 2)
+    private BigDecimal precoVenda;
 
     /**
      * Data e hora de criação do registro.
@@ -137,17 +149,12 @@ public class Produto {
     public Produto() {
     }
 
-    /**
-     * Construtor conveniente para criação de produtos.
-     *
-     * @param nome      nome do produto
-     * @param descricao descrição opcional
-     * @param preco     preço do produto
-     */
-    public Produto(String nome, String descricao, BigDecimal preco) {
+    public Produto(String nome, String descricao, BigDecimal precoVenda, UnidadeMedida unidadeMedida, CategoriaProduto categoria) {
         this.nome = nome;
         this.descricao = descricao;
-        this.preco = preco;
+        this.precoVenda = precoVenda;
+        this.unidadeMedida = unidadeMedida;
+        this.categoria = categoria;
     }
 
     // =========================================================================
@@ -178,12 +185,44 @@ public class Produto {
         this.descricao = descricao;
     }
 
-    public BigDecimal getPreco() {
-        return preco;
+    public BigDecimal getPrecoVenda() {
+        return precoVenda;
     }
 
-    public void setPreco(BigDecimal preco) {
-        this.preco = preco;
+    public void setPrecoVenda(BigDecimal precoVenda) {
+        this.precoVenda = precoVenda;
+    }
+
+    public UnidadeMedida getUnidadeMedida() {
+        return unidadeMedida;
+    }
+
+    public void setUnidadeMedida(UnidadeMedida unidadeMedida) {
+        this.unidadeMedida = unidadeMedida;
+    }
+
+    public CategoriaProduto getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(CategoriaProduto categoria) {
+        this.categoria = categoria;
+    }
+
+    public boolean isPerecivel() {
+        return perecivel;
+    }
+
+    public void setPerecivel(boolean perecivel) {
+        this.perecivel = perecivel;
+    }
+
+    public BigDecimal getEstoqueMinimo() {
+        return estoqueMinimo;
+    }
+
+    public void setEstoqueMinimo(BigDecimal estoqueMinimo) {
+        this.estoqueMinimo = estoqueMinimo;
     }
 
     public Instant getCriadoEm() {

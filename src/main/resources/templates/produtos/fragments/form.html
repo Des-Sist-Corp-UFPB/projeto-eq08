@@ -87,72 +87,56 @@
                             </ul>
                         </div>
 
-                        <!-- Campo Nome -->
-                        <div class="mb-3">
-                            <label for="nome" class="form-label fw-semibold">
-                                Nome <span class="text-danger">*</span>
-                            </label>
-                            <!--
-                              th:field="*{nome}" faz três coisas:
-                              1. Define id="nome" e name="nome"
-                              2. Preenche o value com o valor atual do campo no form
-                              3. Integra com o BindingResult para mostrar erros de validação
-                            -->
-                            <input type="text"
-                                   th:field="*{nome}"
-                                   class="form-control"
-                                   th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
-                                   placeholder="Ex.: Arroz Integral 1kg"
-                                   maxlength="120"
-                                   required/>
-                            <!-- Mensagem de erro do Bean Validation -->
-                            <div class="invalid-feedback"
-                                 th:if="${#fields.hasErrors('nome')}"
-                                 th:errors="*{nome}">
-                                Erro no nome
+                        <!-- Linha 1: Nome e Categoria -->
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="nome" class="form-label fw-semibold">Nome <span class="text-danger">*</span></label>
+                                <input type="text" th:field="*{nome}" class="form-control" th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" placeholder="Ex.: Mussarela fatiada" maxlength="120" required/>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro no nome</div>
                             </div>
-                            <div class="form-text">Entre 2 e 120 caracteres.</div>
+                            <div class="col-md-4 mb-3">
+                                <label for="categoria" class="form-label fw-semibold">Categoria <span class="text-danger">*</span></label>
+                                <select th:field="*{categoria}" class="form-select" th:classappend="${#fields.hasErrors('categoria')} ? 'is-invalid'" required>
+                                    <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat.descricao}">Insumo</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('categoria')}" th:errors="*{categoria}">Erro na categoria</div>
+                            </div>
+                        </div>
+
+                        <!-- Linha 2: Unidade de Medida, Preço e Estoque Mínimo -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="unidadeMedida" class="form-label fw-semibold">Und. Medida <span class="text-danger">*</span></label>
+                                <select th:field="*{unidadeMedida}" class="form-select" th:classappend="${#fields.hasErrors('unidadeMedida')} ? 'is-invalid'" required>
+                                    <option th:each="un : ${unidades}" th:value="${un}" th:text="${un} + ' - ' + ${un.descricao}">KG</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="precoVenda" class="form-label fw-semibold">Preço Venda (R$)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" th:field="*{precoVenda}" class="form-control" th:classappend="${#fields.hasErrors('precoVenda')} ? 'is-invalid'" placeholder="0,00" step="0.01" min="0"/>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="estoqueMinimo" class="form-label fw-semibold">Estoque Mínimo <span class="text-danger">*</span></label>
+                                <input type="number" th:field="*{estoqueMinimo}" class="form-control" th:classappend="${#fields.hasErrors('estoqueMinimo')} ? 'is-invalid'" step="0.01" min="0" required/>
+                            </div>
+                        </div>
+
+                        <!-- Campo Perecível -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="perecivel" th:field="*{perecivel}">
+                                <label class="form-check-label fw-semibold" for="perecivel">Produto Perecível (controlar validade?)</label>
+                            </div>
                         </div>
 
                         <!-- Campo Descrição -->
                         <div class="mb-3">
                             <label for="descricao" class="form-label fw-semibold">Descrição</label>
-                            <textarea th:field="*{descricao}"
-                                      class="form-control"
-                                      th:classappend="${#fields.hasErrors('descricao')} ? 'is-invalid'"
-                                      rows="3"
-                                      placeholder="Descrição opcional do produto..."
-                                      maxlength="2000"></textarea>
-                            <div class="invalid-feedback"
-                                 th:if="${#fields.hasErrors('descricao')}"
-                                 th:errors="*{descricao}">
-                                Erro na descrição
-                            </div>
-                            <div class="form-text">Opcional. Máximo de 2000 caracteres.</div>
-                        </div>
-
-                        <!-- Campo Preço -->
-                        <div class="mb-3">
-                            <label for="preco" class="form-label fw-semibold">
-                                Preço (R$) <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text">R$</span>
-                                <input type="number"
-                                       th:field="*{preco}"
-                                       class="form-control"
-                                       th:classappend="${#fields.hasErrors('preco')} ? 'is-invalid'"
-                                       placeholder="0,00"
-                                       step="0.01"
-                                       min="0"
-                                       required/>
-                                <div class="invalid-feedback"
-                                     th:if="${#fields.hasErrors('preco')}"
-                                     th:errors="*{preco}">
-                                    Erro no preço
-                                </div>
-                            </div>
-                            <div class="form-text">Valor em reais com até 2 casas decimais.</div>
+                            <textarea th:field="*{descricao}" class="form-control" th:classappend="${#fields.hasErrors('descricao')} ? 'is-invalid'" rows="2" placeholder="Notas sobre o produto..." maxlength="2000"></textarea>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}">Erro na descrição</div>
                         </div>
 
                         <!-- Informações do produto em modo edição -->
