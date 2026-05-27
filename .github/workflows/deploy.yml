@@ -34,11 +34,11 @@
 #
 # CONFIGURAÇÃO no servidor (fazer uma vez):
 #   1. Criar usuário: sudo adduser ghactions && sudo usermod -aG docker ghactions
-#   2. Criar diretório: mkdir -p /home/ghactions/mercado/docker
-#   3. Criar o arquivo .env: cp .env.example /home/ghactions/mercado/.env
+#   2. Criar diretório: mkdir -p /home/ghactions/eq08/docker
+#   3. Criar o arquivo .env: cp .env.example /home/ghactions/eq08/.env
 #      e preencher DATABASE_USERNAME e DATABASE_PASSWORD com valores reais.
 #   4. Subir o banco na primeira vez:
-#      cd /home/ghactions/mercado
+#      cd /home/ghactions/eq08
 #      docker compose -f docker/docker-compose.prod.yml up -d postgres
 # =============================================================================
 
@@ -288,11 +288,11 @@ jobs:
       - name: Copiar docker-compose.prod.yml para o servidor
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: dsc.rodrigor.com
+          host: eq08.dsc.rodrigor.com
           username: ghactions
           key: ${{ secrets.SSH_DEPLOY_KEY }}
           source: docker/docker-compose.prod.yml
-          target: /home/ghactions/mercado/
+          target: /home/ghactions/eq08/
 
       # Script de deploy executado no servidor via SSH.
       # envs: passa variáveis de ambiente do Actions para o script remoto.
@@ -304,7 +304,7 @@ jobs:
           GHCR_USER: ${{ github.actor }}
           IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         with:
-          host: dsc.rodrigor.com
+          host: eq08.dsc.rodrigor.com
           username: ghactions
           key: ${{ secrets.SSH_DEPLOY_KEY }}
           envs: GHCR_TOKEN,GHCR_USER,IMAGE_FULL
@@ -312,7 +312,7 @@ jobs:
           script: |
             set -euo pipefail
 
-            DEPLOY_DIR="/home/ghactions/mercado"
+            DEPLOY_DIR="/home/ghactions/eq08"
             COMPOSE_FILE="$DEPLOY_DIR/docker/docker-compose.prod.yml"
 
             echo "======================================================"
@@ -358,7 +358,7 @@ jobs:
             # O endpoint /actuator/health retorna 200 quando a aplicação está pronta.
             echo "Aguardando a aplicação ficar saudável (máx. 90s)..."
             for i in $(seq 1 18); do
-              if curl -sf http://localhost:8080/actuator/health > /dev/null 2>&1; then
+              if curl -sf http://localhost:8108/actuator/health > /dev/null 2>&1; then
                 echo "✓ Aplicação saudável! ($(( i * 5 ))s)"
                 break
               fi
