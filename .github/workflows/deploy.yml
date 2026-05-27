@@ -115,11 +115,6 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      # Converte o nome do repositório para letras minúsculas (Docker exige lowercase)
-      - name: Definir nome da imagem em lowercase
-        run: |
-          echo "IMAGE_FULL=$(echo "${{ env.REGISTRY }}/${{ github.repository }}:latest" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-
       # Garante que o diretório de destino existe no servidor
       - name: Criar diretório de destino se não existir
         uses: appleboy/ssh-action@v1.0.3
@@ -146,15 +141,20 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
-          IMAGE_FULL: ${{ env.IMAGE_FULL }}
+          REPO_NAME: ${{ github.repository }}
+          REGISTRY: ${{ env.REGISTRY }}
         with:
           host: eq08.dsc.rodrigor.com
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_DEPLOY_KEY }}
-          envs: GHCR_TOKEN,GHCR_USER,IMAGE_FULL
+          envs: GHCR_TOKEN,GHCR_USER,REPO_NAME,REGISTRY
           script_stop: true
           script: |
             set -euo pipefail
+
+            # Converte o nome do repositório para minúsculas (Docker exige lowercase)
+            REPO_LOWER=$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]')
+            IMAGE_FULL="$REGISTRY/$REPO_LOWER:latest"
 
             DEPLOY_DIR="/opt/eq08"
             COMPOSE_FILE="$DEPLOY_DIR/docker/docker-compose.prod.yml"
