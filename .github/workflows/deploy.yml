@@ -260,7 +260,7 @@ jobs:
   # ============================================================================
   # JOB 3 — Deploy no servidor via SSH
   #
-  # Executa no servidor dsc.rodrigor.com com o usuário "ghactions".
+  # Executa no servidor eq08.dsc.rodrigor.com com o usuário "ghactions".
   # O que acontece:
   #   1. Copia o docker-compose.prod.yml atualizado para o servidor
   #   2. Autentica no GHCR e baixa a nova imagem
