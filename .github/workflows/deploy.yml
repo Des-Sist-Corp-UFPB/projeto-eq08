@@ -115,6 +115,16 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
+      # Garante que o diretório de destino existe no servidor
+      - name: Criar diretório de destino se não existir
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: eq08.dsc.rodrigor.com
+          username: ghactions
+          key: ${{ secrets.SSH_DEPLOY_KEY }}
+          script: |
+            mkdir -p /home/ghactions/eq08/docker
+
       # Copia o docker-compose.prod.yml para o servidor a cada deploy.
       - name: Copiar docker-compose.prod.yml para o servidor
         uses: appleboy/scp-action@v0.1.7
