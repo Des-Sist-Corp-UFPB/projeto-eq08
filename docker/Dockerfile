@@ -10,7 +10,7 @@
 #   - Separação entre ambiente de build e runtime
 #
 # Como construir:
-#   docker build -f docker/Dockerfile -t mercado:latest .
+#   docker build -f docker/Dockerfile -t ghcr.io/des-sist-corp-ufpb/eq08:latest .
 # =============================================================================
 
 # ---- Estágio 1: Build -------------------------------------------------------

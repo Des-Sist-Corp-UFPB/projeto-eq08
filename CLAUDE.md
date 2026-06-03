@@ -67,14 +67,14 @@ mvn versions:display-dependency-updates -Pversions
 docker compose -f docker/docker-compose.dev.yml --profile scan up trivy
 
 # Trivy scan da imagem (depois de fazer o build)
-docker build -f docker/Dockerfile -t mercado:latest .
-docker run --rm aquasec/trivy image mercado:latest
+docker build -f docker/Dockerfile -t ghcr.io/des-sist-corp-ufpb/eq08:latest .
+docker run --rm aquasec/trivy image ghcr.io/des-sist-corp-ufpb/eq08:latest
 ```
 
 ### Produção
 ```bash
 # Build imagem de produção
-docker build -f docker/Dockerfile -t mercado:latest .
+docker build -f docker/Dockerfile -t ghcr.io/des-sist-corp-ufpb/eq08:latest .
 
 # Subir produção (requer .env configurado)
 docker compose -f docker/docker-compose.prod.yml up -d
@@ -114,7 +114,7 @@ SpotBugs e OWASP Dependency-Check são lentos. Separar em perfil permite que o b
 | SpotBugs + FindSecBugs | SAST bytecode Java | `mvn verify -Psecurity` |
 | Semgrep | SAST código-fonte | `semgrep --config=auto src/` |
 | Trivy (fs) | Vulnerabilidades em libs | docker compose `--profile scan` |
-| Trivy (image) | Vulnerabilidades na imagem Docker | `trivy image mercado:latest` |
+| Trivy (image) | Vulnerabilidades na imagem Docker | `trivy image ghcr.io/des-sist-corp-ufpb/eq08:latest` |
 | OWASP Dependency-Check | CVEs em dependências | `mvn verify -Psecurity` |
 
 ## Para Alunos: Próximos Passos Sugeridos

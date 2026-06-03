@@ -288,7 +288,7 @@ Sem a chave, o download do banco de dados NVD é muito lento (pode levar 20+ min
 
 ### Variável — Nome da imagem Docker (`APP_IMAGE`)
 
-O pipeline publica a imagem Docker no GitHub Container Registry (GHCR) com o nome do seu repositório. Você não precisa configurar isso manualmente — o workflow usa `${{ github.repository }}` para montar o nome automaticamente.
+O pipeline publica a imagem Docker no GitHub Container Registry (GHCR) com o nome configurado no workflow (`ghcr.io/des-sist-corp-ufpb/eq08:latest`).
 
 Mas o arquivo `.env` no servidor precisa saber qual imagem usar. O script de deploy atualiza isso automaticamente na primeira execução.
 

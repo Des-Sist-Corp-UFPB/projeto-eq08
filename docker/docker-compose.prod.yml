@@ -8,7 +8,7 @@
 #
 # CONFIGURAÇÃO — arquivo .env na raiz do projeto no servidor:
 #
-#   APP_IMAGE=ghcr.io/usuario/mercado:latest   ← atualizado automaticamente pelo CI/CD
+#   APP_IMAGE=ghcr.io/des-sist-corp-ufpb/eq08:latest   ← atualizado automaticamente pelo CI/CD
 #   DATABASE_URL=jdbc:postgresql://postgres:5432/eq08
 #   DATABASE_USERNAME=mercado
 #   DATABASE_PASSWORD=<senha-forte-aqui>
@@ -19,7 +19,7 @@
 #   docker compose -f docker/docker-compose.prod.yml up -d app
 #
 # ATUALIZAÇÕES subsequentes (feitas automaticamente pelo GitHub Actions):
-#   APP_IMAGE=ghcr.io/usuario/mercado:latest \
+#   APP_IMAGE=ghcr.io/des-sist-corp-ufpb/eq08:latest \
 #   docker compose -f docker/docker-compose.prod.yml up -d --no-deps --force-recreate app
 #
 # =============================================================================
@@ -62,8 +62,8 @@ services:
   # ---------------------------------------------------------------------------
   app:
     # ${APP_IMAGE} é definida no .env e atualizada pelo script de deploy.
-    # Exemplo: ghcr.io/usuario/mercado:latest
-    # O CI/CD também usa tags com commit hash (ghcr.io/usuario/mercado:sha-a1b2c3d)
+    # Exemplo: ghcr.io/des-sist-corp-ufpb/eq08:latest
+    # O CI/CD também usa tags com commit hash (ghcr.io/des-sist-corp-ufpb/eq08:sha-a1b2c3d)
     # para rastreabilidade — aqui usamos :latest que aponta para o build mais recente.
     image: ${APP_IMAGE}
     container_name: mercado-app-prod
