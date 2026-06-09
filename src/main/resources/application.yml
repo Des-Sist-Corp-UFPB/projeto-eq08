@@ -16,3 +16,12 @@ management:
     health:
       # Detalhes do health só são exibidos para usuários autenticados
       show-details: when-authorized
+
+aws:
+  s3:
+    endpoint: http://minio:9000
+    public-endpoint: https://s3.dsc.rodrigor.com
+    region: us-east-1
+    bucket: eq08
+    access-key: eq08
+    secret-key: ${MINIO_SECRET:changeme}
