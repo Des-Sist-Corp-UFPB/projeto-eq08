@@ -33,7 +33,7 @@ services:
     container_name: gestor_app
     restart: always
     ports:
-      - "7070:7070"
+      - "127.0.0.1:8108:8080"
     environment:
       # Banco de dados
       DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-gestor_db}
@@ -43,13 +43,13 @@ services:
       JWT_SECRET: ${JWT_SECRET:-mude-esta-chave-secreta-em-producao-1234567890abcdef}
       JWT_EXPIRY_DAYS: ${JWT_EXPIRY_DAYS:-7}
       # Aplicação
-      APP_PORT: 7070
+      APP_PORT: 8080
       APP_ENV: ${APP_ENV:-production}
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:7070/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ping || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
