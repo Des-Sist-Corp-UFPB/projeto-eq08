@@ -35,17 +35,3 @@ public record Supplier(
     }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-
-/**
- * Scorecard de performance de um fornecedor.
- */
-public record SupplierPerformance(
-        UUID supplierId,
-        String supplierName,
-        double avgDeliveryDays,
-        double avgQualityRating,
-        double avgPriceRating,
-        BigDecimal totalPurchasesValue,
-        long purchaseOrdersCount
-) {}
