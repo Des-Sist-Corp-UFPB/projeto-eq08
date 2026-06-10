@@ -1,8 +1,8 @@
 # ===========================
 # Stage 1: Build (Maven)
 # ===========================
-# Corrigido para o repositório oficial do Adoptium no GitHub
-FROM ghcr.io/adoptium/eclipse-temurin:21-jdk-alpine AS build
+# Corrigido para o Docker Hub oficial do Adoptium
+FROM eclipse-temurin:21-jdk-alpine AS build
 
 WORKDIR /app
 
@@ -19,8 +19,8 @@ RUN mvn package -DskipTests -q
 # ===========================
 # Stage 2: Runtime (JRE)
 # ===========================
-# Corrigido para o repositório oficial do Adoptium no GitHub
-FROM ghcr.io/adoptium/eclipse-temurin:21-jre-alpine
+# Corrigido para o Docker Hub oficial do Adoptium
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
