@@ -106,7 +106,11 @@ public class Main {
         app.get("/register",  authController::showRegister);
         app.post("/register", authController::processRegister);
         app.get("/logout",  authController::logout);
-        app.get("/health",  ctx -> ctx.json(Map.of("status", "UP", "app", "Gestor de Negócio SaaS")));
+        app.get("/ping",  ctx -> ctx.json(Map.of(
+            "status", "ok",
+            "service", "eq08",
+            "timestamp", java.time.Instant.now().toString()
+        )));
 
         // ====================================================================
         // Dashboard

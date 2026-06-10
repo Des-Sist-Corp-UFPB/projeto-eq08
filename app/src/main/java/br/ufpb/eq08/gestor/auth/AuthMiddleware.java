@@ -26,7 +26,7 @@ public class AuthMiddleware {
 
     /** Rotas públicas (não precisam de autenticação) */
     private static final Set<String> PUBLIC_PATHS = new HashSet<>(Arrays.asList(
-            "/login", "/register", "/health", "/static"
+            "/login", "/register", "/ping", "/static"
     ));
 
     private final UserRepository userRepository;
