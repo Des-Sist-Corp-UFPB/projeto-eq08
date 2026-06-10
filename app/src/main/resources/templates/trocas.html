@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{templates/layout :: head}"></head>
+<body class="bg-body-secondary">
+
+<th:block th:include="~{templates/fragments/navbar.html}"></th:block>
+
+<main class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0"><i class="bi bi-arrow-left-right text-warning me-2"></i>Trocas de Turno</h1>
+    </div>
+
+    <!-- Navegação interna -->
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item"><a class="nav-link" href="/escalas">Escalas Ativas</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/escalas/trocas">Solicitações de Troca</a></li>
+        <li class="nav-item"><a class="nav-link" href="/escalas/afastamentos">Férias / Afastamentos</a></li>
+    </ul>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data Solicitação</th>
+                            <th>Solicitante</th>
+                            <th>Escala Original</th>
+                            <th>Escala Alvo</th>
+                            <th>Status</th>
+                            <th class="text-end" th:if="${currentUser.role() != 'OPERATOR'}">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(trades)}">
+                            <td colspan="6" class="text-center py-4 text-muted">Nenhuma solicitação de troca de turno.</td>
+                        </tr>
+                        <tr th:each="t : ${trades}">
+                            <td th:text="${#temporals.format(t.createdAt(), 'dd/MM/yyyy HH:mm')}">Data</td>
+                            <td class="fw-semibold" th:text="${t.requestingUserId()}">Usuário</td>
+                            <td th:text="${t.requestingScheduleId()}">ID Escala Req</td>
+                            <td th:text="${t.targetScheduleId()}">ID Escala Alvo</td>
+                            <td>
+                                <span class="badge" th:classappend="${t.status() == 'PENDING' ? 'bg-warning' : (t.status() == 'APPROVED' ? 'bg-success' : 'bg-danger')}" th:text="${t.status()}">Status</span>
+                            </td>
+                            <td class="text-end" th:if="${currentUser.role() != 'OPERATOR'}">
+                                <div th:if="${t.status() == 'PENDING'}">
+                                    <form th:action="@{'/escalas/trocas/' + ${t.id()} + '/aprovar'}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> Aprovar</button>
+                                    </form>
+                                    <form th:action="@{'/escalas/trocas/' + ${t.id()} + '/rejeitar'}" method="post" class="d-inline ms-1">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i> Rejeitar</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

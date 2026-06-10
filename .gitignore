@@ -92,3 +92,5 @@ trivy-results.sarif
 *.seed
 *.pid.lock
 HELP.md
+
+*.env

@@ -1,0 +1,88 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Data</th>
+                <th>Fornecedor</th>
+                <th class="text-end">Total (R$)</th>
+                <th>Status</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(purchases)}">
+                <td colspan="5" class="text-center py-4 text-muted">Nenhuma ordem de compra encontrada.</td>
+            </tr>
+            <tr th:each="po : ${purchases}">
+                <td th:text="${#temporals.format(po.createdAt(), 'dd/MM/yyyy')}">Data</td>
+                <td th:text="${po.supplierId()}">ID (ideal fazer join no repository, simplificado aqui)</td>
+                <td class="text-end fw-bold" th:text="'R$ ' + ${#numbers.formatDecimal(po.totalPrice(), 1, 'COMMA', 2, 'POINT')}">R$ 0,00</td>
+                <td>
+                    <span class="badge" th:classappend="${po.status() == 'PENDING' ? 'bg-warning' : (po.status() == 'COMPLETED' ? 'bg-success' : 'bg-danger')}" th:text="${po.status()}">STATUS</span>
+                </td>
+                <td class="text-end" th:if="${currentUser.role() != 'OPERATOR'}">
+                    <div th:if="${po.status() == 'PENDING'}">
+                        <!-- Botão Concluir com Modal de Avaliação -->
+                        <button class="btn btn-sm btn-outline-success me-1" data-bs-toggle="modal" th:data-bs-target="'#completeModal' + ${po.id()}">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                        <form th:action="@{'/compras/' + ${po.id()} + '/cancelar'}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="Cancelar ordem?"><i class="bi bi-x-lg"></i></button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Modais de Conclusão para Avaliação de Performance -->
+<div th:each="po : ${purchases}" th:if="${po.status() == 'PENDING'}" class="modal fade" th:id="'completeModal' + ${po.id()}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <form th:action="@{'/compras/' + ${po.id()} + '/concluir'}" method="post">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Receber Ordem de Compra</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>O estoque dos insumos será atualizado automaticamente (Custo Médio).
+                    </div>
+                    
+                    <h6 class="fw-bold text-muted small text-uppercase">Avaliação do Fornecedor</h6>
+                    <div class="mb-3">
+                        <label class="form-label small">Dias para Entrega</label>
+                        <input type="number" name="deliveryDays" class="form-control" placeholder="Tempo em dias desde o pedido">
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small">Qualidade (1 a 5)</label>
+                            <select name="qualityRating" class="form-select">
+                                <option value="5">5 - Excelente</option>
+                                <option value="4">4 - Boa</option>
+                                <option value="3">3 - Regular</option>
+                                <option value="2">2 - Ruim</option>
+                                <option value="1">1 - Péssima</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">Preço (1 a 5)</label>
+                            <select name="priceRating" class="form-select">
+                                <option value="5">5 - Excelente</option>
+                                <option value="4">4 - Bom</option>
+                                <option value="3">3 - Regular</option>
+                                <option value="2">2 - Ruim</option>
+                                <option value="1">1 - Péssimo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Confirmar Recebimento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

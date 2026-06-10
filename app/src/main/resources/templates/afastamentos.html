@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{templates/layout :: head}"></head>
+<body class="bg-body-secondary">
+
+<th:block th:include="~{templates/fragments/navbar.html}"></th:block>
+
+<main class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0"><i class="bi bi-calendar-x text-danger me-2"></i>Férias e Afastamentos</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#absenceModal">
+            <i class="bi bi-plus-lg me-1"></i>Registrar Afastamento
+        </button>
+    </div>
+
+    <!-- Navegação interna -->
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item"><a class="nav-link" href="/escalas">Escalas Ativas</a></li>
+        <li class="nav-item"><a class="nav-link" href="/escalas/trocas">Solicitações de Troca</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/escalas/afastamentos">Férias / Afastamentos</a></li>
+    </ul>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Colaborador</th>
+                            <th>Período</th>
+                            <th>Tipo</th>
+                            <th>Motivo</th>
+                            <th>Status</th>
+                            <th class="text-end" th:if="${currentUser.role() != 'OPERATOR'}">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(absences)}">
+                            <td colspan="6" class="text-center py-4 text-muted">Nenhum afastamento registrado.</td>
+                        </tr>
+                        <tr th:each="a : ${absences}">
+                            <td class="fw-semibold" th:text="${a.userId()}">Usuário</td>
+                            <td>
+                                <i class="bi bi-calendar2-range me-1 text-muted"></i>
+                                <span th:text="${#temporals.format(a.startDate(), 'dd/MM/yyyy')} + ' a ' + ${#temporals.format(a.endDate(), 'dd/MM/yyyy')}">Período</span>
+                            </td>
+                            <td><span class="badge bg-secondary" th:text="${a.type()}">Tipo</span></td>
+                            <td class="small text-muted" th:text="${a.reason()}">Motivo</td>
+                            <td>
+                                <span class="badge" th:classappend="${a.status() == 'PENDING' ? 'bg-warning' : 'bg-success'}" th:text="${a.status()}">Status</span>
+                            </td>
+                            <td class="text-end" th:if="${currentUser.role() != 'OPERATOR'}">
+                                <div th:if="${a.status() == 'PENDING'}">
+                                    <form th:action="@{'/escalas/afastamentos/' + ${a.id()} + '/aprovar'}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> Aprovar</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal -->
+<div class="modal fade" id="absenceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <form action="/escalas/afastamentos" method="post">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Registrar Afastamento / Férias</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Colaborador</label>
+                        <select name="userId" class="form-select" required th:disabled="${currentUser.role() == 'OPERATOR'}">
+                            <option th:if="${currentUser.role() == 'OPERATOR'}" th:value="${currentUser.id()}" th:text="${currentUser.name()}"></option>
+                            <th:block th:if="${currentUser.role() != 'OPERATOR'}">
+                                <option th:each="u : ${users}" th:value="${u.id()}" th:text="${u.name()}" th:selected="${u.id() == currentUser.id()}"></option>
+                            </th:block>
+                        </select>
+                        <!-- Input hidden se for operator -->
+                        <input th:if="${currentUser.role() == 'OPERATOR'}" type="hidden" name="userId" th:value="${currentUser.id()}">
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Início</label>
+                            <input type="date" name="startDate" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Fim</label>
+                            <input type="date" name="endDate" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tipo</label>
+                        <select name="type" class="form-select" required>
+                            <option value="VACATION">Férias</option>
+                            <option value="SICK_LEAVE">Atestado Médico / Doença</option>
+                            <option value="PERSONAL">Motivos Pessoais</option>
+                            <option value="OTHER">Outros</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo (Opcional)</label>
+                        <textarea name="reason" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

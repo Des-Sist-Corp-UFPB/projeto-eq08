@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Login — Gestor de Negócio SaaS">
+    <title>Login | Gestor de Negócio</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/css/app.css" rel="stylesheet">
+</head>
+<body class="bg-body-secondary">
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5">
+    <div class="card shadow-lg border-0" style="max-width: 440px; width: 100%;">
+        <div class="card-body p-5">
+            <!-- Logo -->
+            <div class="text-center mb-4">
+                <div class="auth-logo mb-3">
+                    <i class="bi bi-graph-up-arrow fs-1 text-primary"></i>
+                </div>
+                <h1 class="h3 fw-bold text-primary mb-1">Gestor de Negócio</h1>
+                <p class="text-muted small">SaaS de Gestão Modular para PMEs</p>
+            </div>
+
+            <!-- Alerta de erro -->
+            <div class="alert alert-danger d-flex align-items-center" th:if="${error}" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <span th:text="${error}">Erro</span>
+            </div>
+
+            <!-- Mensagem de registro bem-sucedido -->
+            <div class="alert alert-success d-flex align-items-center" th:if="${param.registered}" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                Empresa registrada com sucesso! Faça login para continuar.
+            </div>
+
+            <!-- Formulário de login -->
+            <form method="post" action="/login" id="loginForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold">E-mail</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" name="email"
+                               th:value="${email}" placeholder="seuemail@empresa.com"
+                               required autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold">Senha</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password"
+                               placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="btn btn-outline-secondary"
+                                onclick="togglePassword('password', this)">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-semibold py-2">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                </button>
+            </form>
+
+            <hr class="my-4">
+
+            <div class="text-center">
+                <p class="text-muted small mb-2">Não tem uma conta?</p>
+                <a href="/register" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-building-add me-1"></i>Registrar Empresa
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function togglePassword(fieldId, btn) {
+    const field = document.getElementById(fieldId);
+    const icon = btn.querySelector('i');
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    } else {
+        field.type = 'password';
+        icon.className = 'bi bi-eye';
+    }
+}
+</script>
+</body>
+</html>

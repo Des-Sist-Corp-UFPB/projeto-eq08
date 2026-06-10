@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # ============================
+  # Banco de dados PostgreSQL
+  # ============================
+  db:
+    image: postgres:15-alpine
+    container_name: gestor_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-gestor_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-gestor_password}
+      POSTGRES_DB: ${DB_NAME:-gestor_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-gestor_user} -d ${DB_NAME:-gestor_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ============================
+  # Aplicação Javalin + Thymeleaf
+  # ============================
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: gestor_app
+    restart: always
+    ports:
+      - "7070:7070"
+    environment:
+      # Banco de dados
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-gestor_db}
+      DB_USER: ${DB_USER:-gestor_user}
+      DB_PASSWORD: ${DB_PASSWORD:-gestor_password}
+      # Segurança
+      JWT_SECRET: ${JWT_SECRET:-mude-esta-chave-secreta-em-producao-1234567890abcdef}
+      JWT_EXPIRY_DAYS: ${JWT_EXPIRY_DAYS:-7}
+      # Aplicação
+      APP_PORT: 7070
+      APP_ENV: ${APP_ENV:-production}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7070/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  postgres_data:

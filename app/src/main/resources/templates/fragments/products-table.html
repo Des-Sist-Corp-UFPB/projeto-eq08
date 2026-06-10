@@ -1,0 +1,36 @@
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Produto</th>
+                <th class="text-end">Preço (R$)</th>
+                <th>Ficha Técnica</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(products)}">
+                <td colspan="4" class="text-center py-4 text-muted">Nenhum produto cadastrado.</td>
+            </tr>
+            <tr th:each="p : ${products}">
+                <td class="fw-semibold" th:text="${p.name()}">Nome</td>
+                <td class="text-end fw-bold text-primary" th:text="'R$ ' + ${#numbers.formatDecimal(p.price(), 1, 'COMMA', 2, 'POINT')}">R$ 0,00</td>
+                <td>
+                    <span class="badge bg-secondary" th:text="${#lists.size(p.ingredients())} + ' ingredientes'">0 ingredientes</span>
+                    <button type="button" class="btn btn-link btn-sm p-0 ms-2 text-decoration-none" 
+                            data-bs-toggle="popover" title="Ingredientes" 
+                            data-bs-trigger="focus"
+                            th:data-bs-content="${#strings.listJoin(p.ingredients().![qty + 'x ' + insumoName], ', ')}">
+                        <i class="bi bi-info-circle"></i>
+                    </button>
+                </td>
+                <td class="text-end" th:if="${currentUser.role() != 'OPERATOR'}">
+                    <form th:action="@{'/produtos/' + ${p.id()}}" method="post" class="d-inline">
+                        <input type="hidden" name="_method" value="delete">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="Excluir este produto?"><i class="bi bi-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

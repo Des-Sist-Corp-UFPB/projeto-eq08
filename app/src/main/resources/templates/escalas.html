@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{templates/layout :: head}"></head>
+<body class="bg-body-secondary">
+
+<th:block th:include="~{templates/fragments/navbar.html}"></th:block>
+
+<main class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0"><i class="bi bi-calendar3 text-primary me-2"></i>Escalas de Trabalho</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleModal" th:if="${currentUser.role() != 'OPERATOR'}">
+            <i class="bi bi-plus-lg me-1"></i>Nova Escala
+        </button>
+    </div>
+
+    <!-- Navegação interna do módulo -->
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <a class="nav-link active" href="/escalas">Escalas Ativas</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/escalas/trocas">Solicitações de Troca</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/escalas/afastamentos">Férias / Afastamentos</a>
+        </li>
+    </ul>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data</th>
+                            <th>Colaborador</th>
+                            <th>Turno</th>
+                            <th>Notas</th>
+                            <th class="text-end" th:if="${currentUser.role() != 'OPERATOR'}">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(schedules)}">
+                            <td colspan="5" class="text-center py-4 text-muted">Nenhuma escala programada.</td>
+                        </tr>
+                        <tr th:each="s : ${schedules}">
+                            <td th:text="${#temporals.format(s.shiftDate(), 'dd/MM/yyyy')}">Data</td>
+                            <td class="fw-semibold" th:text="${s.operatorId()}">Colaborador ID</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-clock me-1"></i>
+                                    <span th:text="${s.startTime() + ' - ' + s.endTime()}">00:00 - 00:00</span>
+                                </span>
+                            </td>
+                            <td class="small text-muted" th:text="${s.notes()}">Notas</td>
+                            <td class="text-end" th:if="${currentUser.role() != 'OPERATOR'}">
+                                <form th:action="@{'/escalas/' + ${s.id()}}" method="post" class="d-inline">
+                                    <input type="hidden" name="_method" value="delete">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="Remover esta escala?"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal Nova Escala -->
+<div class="modal fade" id="scheduleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <form action="/escalas" method="post">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Agendar Turno</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Colaborador</label>
+                        <select name="userId" class="form-select" required>
+                            <option th:each="u : ${users}" th:value="${u.id()}" th:text="${u.name()}"></option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Data</label>
+                        <input type="date" name="shiftDate" class="form-control" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Início</label>
+                            <input type="time" name="startTime" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Fim</label>
+                            <input type="time" name="endTime" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observações</label>
+                        <input type="text" name="notes" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

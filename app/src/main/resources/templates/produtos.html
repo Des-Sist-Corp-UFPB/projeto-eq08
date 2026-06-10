@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{templates/layout :: head}"></head>
+<body class="bg-body-secondary">
+
+<th:block th:include="~{templates/fragments/navbar.html}"></th:block>
+
+<main class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0"><i class="bi bi-card-list text-primary me-2"></i>Produtos / Cardápio</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal" th:if="${currentUser.role() != 'OPERATOR'}">
+            <i class="bi bi-plus-lg me-1"></i>Novo Produto
+        </button>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div id="productsTableContainer">
+                <th:block th:include="~{templates/fragments/products-table.html}"></th:block>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal Novo Produto com Ficha Técnica -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <form action="/produtos" method="post">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold">Novo Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-5">
+                            <label class="form-label">Nome do Produto</label>
+                            <input type="text" name="name" class="form-control" placeholder="Ex: Hambúrguer Clássico" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Categoria</label>
+                            <select name="categoryId" class="form-select">
+                                <option value="">Sem categoria</option>
+                                <option th:each="c : ${categories}" th:value="${c.id()}" th:text="${c.name()}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Preço de Venda (R$)</label>
+                            <input type="number" step="0.01" name="price" class="form-control" placeholder="0.00" required min="0">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="fw-bold mb-3"><i class="bi bi-receipt-cutoff me-2"></i>Ficha Técnica (Ingredientes)</h6>
+                    <p class="text-muted small mb-3">Defina os insumos que compõem este produto para baixa automática no estoque.</p>
+
+                    <div id="ingredientsList">
+                        <div class="row g-2 mb-2 ingredient-row">
+                            <div class="col-7">
+                                <select name="ingredientId" class="form-select form-select-sm">
+                                    <option value="">Selecione um insumo...</option>
+                                    <option th:each="i : ${insumos}" th:value="${i.id()}" th:text="${i.name()} + ' (' + ${i.unit()} + ')'"></option>
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <input type="number" step="0.001" name="ingredientQty" class="form-control form-control-sm" placeholder="Quantidade">
+                            </div>
+                            <div class="col-1 text-end">
+                                <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.ingredient-row').remove()"><i class="bi bi-x"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addIngredientRow()">
+                        <i class="bi bi-plus me-1"></i>Adicionar Ingrediente
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Produto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+function addIngredientRow() {
+    const list = document.getElementById('ingredientsList');
+    if (!list) return;
+    
+    // Pegar o primeiro select como template (gambiarra simples para MVP)
+    const firstRow = list.querySelector('.ingredient-row');
+    if (firstRow) {
+        const clone = firstRow.cloneNode(true);
+        clone.querySelector('select').value = '';
+        clone.querySelector('input').value = '';
+        list.appendChild(clone);
+    }
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

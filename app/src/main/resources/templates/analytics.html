@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{templates/layout :: head}"></head>
+<body class="bg-body-secondary">
+
+<th:block th:include="~{templates/fragments/navbar.html}"></th:block>
+
+<main class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0"><i class="bi bi-cpu text-primary me-2"></i>Motor de IA e Analytics</h1>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recomendações -->
+        <div class="col-12 col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="fw-bold mb-0">Recomendações da IA</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ação</th>
+                                    <th>Impacto</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Decisão</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(recommendations)}">
+                                    <td colspan="4" class="text-center py-4 text-muted">Nenhuma recomendação no momento.</td>
+                                </tr>
+                                <tr th:each="r : ${recommendations}">
+                                    <td>
+                                        <div class="fw-semibold small" th:text="${r.title()}">Título</div>
+                                        <div class="text-muted" style="font-size: 0.8rem;" th:text="${r.description()}">Desc</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" th:classappend="${r.impactLevel() == 'HIGH' ? 'bg-danger' : (r.impactLevel() == 'MEDIUM' ? 'bg-warning' : 'bg-info')}" th:text="${r.impactLevel()}">IMPACT</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border" th:text="${r.status()}">STATUS</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div th:if="${r.status() == 'PENDING' and currentUser.role() != 'OPERATOR'}">
+                                            <form th:action="@{'/analytics/recomendacoes/' + ${r.id()} + '/aplicar'}" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Aplicar (Marcar como lido)"><i class="bi bi-check-lg"></i></button>
+                                            </form>
+                                            <form th:action="@{'/analytics/recomendacoes/' + ${r.id()} + '/dispensar'}" method="post" class="d-inline ms-1">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Dispensar/Ignorar"><i class="bi bi-x-lg"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Previsões -->
+        <div class="col-12 col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Previsão de Demanda (7 dias)</h5>
+                    <form th:action="@{/analytics/gerar-previsoes}" method="post">
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-magic me-1"></i>Gerar / Atualizar</button>
+                    </form>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data Alvo</th>
+                                    <th class="text-center">Vol. Vendas</th>
+                                    <th class="text-center">Confiança</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(forecasts)}">
+                                    <td colspan="3" class="text-center py-4 text-muted">Sem dados de previsão gerados.</td>
+                                </tr>
+                                <tr th:each="f : ${forecasts}">
+                                    <td class="fw-semibold" th:text="${#temporals.format(f.targetDate(), 'dd/MM/yyyy')}">Data</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary-subtle text-primary" th:text="'~ ' + ${f.predictedOrders()} + ' pedidos'"></span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" role="progressbar" th:style="'width: ' + ${#numbers.formatDecimal(f.confidenceScore().multiply(new java.math.BigDecimal(100)), 0, 0)} + '%'"></div>
+                                        </div>
+                                        <small class="text-muted" th:text="${#numbers.formatDecimal(f.confidenceScore().multiply(new java.math.BigDecimal(100)), 0, 0)} + '%'"></small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
