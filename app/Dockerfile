@@ -1,7 +1,7 @@
 # ===========================
 # Stage 1: Build (Maven)
 # ===========================
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM ghcr.io/docker-library/eclipse-temurin:21-jdk-alpine AS build
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN mvn package -DskipTests -q
 # ===========================
 # Stage 2: Runtime (JRE)
 # ===========================
-FROM eclipse-temurin:21-jre-alpine
+FROM ghcr.io/docker-library/eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
