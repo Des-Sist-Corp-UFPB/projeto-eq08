@@ -47,11 +47,3 @@ public record Insumo(
     }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-
-/**
- * Categoria de insumo ou produto.
- */
-class Category {
-    // Implementado em Category.java separado
-}

@@ -51,7 +51,7 @@ public record PurchaseOrder(
 /**
  * Item (insumo) contido em uma ordem de compra.
  */
-record PurchaseItem(
+public record PurchaseItem(
         UUID id,
         UUID purchaseOrderId,
         UUID insumoId,

@@ -40,7 +40,7 @@ public record Supplier(
 /**
  * Scorecard de performance de um fornecedor.
  */
-record SupplierPerformance(
+public record SupplierPerformance(
         UUID supplierId,
         String supplierName,
         double avgDeliveryDays,

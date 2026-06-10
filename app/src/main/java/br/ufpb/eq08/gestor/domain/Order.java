@@ -41,7 +41,7 @@ public record Order(
 /**
  * Item de um cupom de venda.
  */
-record OrderItem(
+public record OrderItem(
         UUID id,
         UUID orderId,
         UUID productId,

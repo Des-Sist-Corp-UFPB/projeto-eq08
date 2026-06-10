@@ -54,7 +54,7 @@ public record Product(
 /**
  * Item da Ficha Técnica: ingrediente de um produto.
  */
-record ProductIngredient(
+public record ProductIngredient(
         UUID id,
         UUID productId,
         UUID insumoId,

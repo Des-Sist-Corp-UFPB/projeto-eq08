@@ -42,7 +42,7 @@ public record DemandForecast(
  * impactLevel: HIGH | MEDIUM | LOW
  * status: PENDING | APPLIED | DISMISSED
  */
-record AIRecommendation(
+public record AIRecommendation(
         UUID id,
         UUID tenantId,
         String type,

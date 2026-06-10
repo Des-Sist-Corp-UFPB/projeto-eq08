@@ -40,7 +40,7 @@ public record EmployeeSchedule(
 /**
  * Solicitação de troca de turno entre colaboradores.
  */
-record ShiftTrade(
+public record ShiftTrade(
         UUID id,
         UUID tenantId,
         UUID requestingUserId,
@@ -85,7 +85,7 @@ record ShiftTrade(
 /**
  * Afastamento, férias ou licença de colaborador.
  */
-record Absence(
+public record Absence(
         UUID id,
         UUID tenantId,
         UUID userId,
