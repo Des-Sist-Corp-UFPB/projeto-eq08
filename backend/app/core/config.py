@@ -1,26 +1,48 @@
-import os
-from typing import List, Union
-from pydantic import AnyHttpUrl, validator
+from typing import List, Optional
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Gestor de Negócio SaaS"
-    
+
     # JWT Security
-    # In production, this MUST be changed to a secure secret key
-    SECRET_KEY: str = "super-secret-key-that-must-be-changed-in-production-1234567890"
+    SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    
-    # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./gestor.db"
-    
+
+    # ─── Banco de dados — lidas do ambiente (Portainer) ───
+    # Mapeamento das propriedades Spring do servidor:
+    #   spring.datasource.url      → DB_HOST, DB_PORT, DB_NAME
+    #   spring.datasource.username → DB_USER
+    #   spring.datasource.password → DB_PASSWORD
+    #   hikari.maximum-pool-size   → DB_POOL_SIZE
+    DB_HOST: str = "postgres"
+    DB_PORT: int = 5432
+    DB_NAME: str = "eq08"
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_POOL_SIZE: int = 10
+
+    # Montada automaticamente a partir das variáveis acima.
+    # Pode ser sobrescrita definindo DATABASE_URL diretamente no Portainer.
+    DATABASE_URL: Optional[str] = None
+
+    @model_validator(mode="after")
+    def assemble_database_url(self) -> "Settings":
+        """Monta DATABASE_URL asyncpg a partir das partes individuais."""
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = (
+                f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
+                f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+            )
+        return self
+
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
-    USE_REDIS: bool = False  # Set to True if Redis is active
-    
+    USE_REDIS: bool = False
+
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timezone
 from app.api.api import api_router
 from app.core.config import settings
 
@@ -18,6 +19,19 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+
+@app.get("/ping", tags=["health"])
+async def ping():
+    """
+    Public health check endpoint — required for server status monitoring.
+    No authentication required.
+    """
+    return {
+        "status": "ok",
+        "service": "eq08",
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+    }
 
 
 @app.get("/health", tags=["health"])
