@@ -33,14 +33,13 @@ COPY --from=builder /install /usr/local
 # Copia código-fonte
 COPY app ./app
 
-# Variáveis de ambiente padrão (sobrescritas em runtime)
-ENV DATABASE_URL="postgresql+asyncpg://eq08:eq08@postgres:5432/eq08"
+# Variáveis de ambiente (credenciais injetadas pelo Portainer em runtime)
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-EXPOSE 8000
+EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/ping')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/ping')" || exit 1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
