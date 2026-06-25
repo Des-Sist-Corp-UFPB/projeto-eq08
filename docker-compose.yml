@@ -1,3 +1,14 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — PRODUÇÃO (servidor dsc.rodrigor.com)
+#
+# Infraestrutura do servidor (gerenciada pelo professor/admin):
+#   - Caddy  : proxy reverso TLS, roteia <equipe>.dsc.rodrigor.com → 127.0.0.1:8108
+#   - postgres: instância compartilhada (network: servidor)
+#   - Portainer: gerencia este compose via interface web
+#
+# A equipe NÃO sobe PostgreSQL nem Redis próprios aqui.
+# As credenciais abaixo são injetadas pelo Portainer (Environment > env vars).
+# ─────────────────────────────────────────────────────────────────────────────
 version: '3.8'
 
 services:
@@ -6,19 +17,20 @@ services:
     container_name: eq08_backend
     restart: always
     ports:
+      # Caddy faz proxy de <subdominio>:443 → 127.0.0.1:8108 → container:8080
       - "127.0.0.1:8108:8080"
     environment:
-      # Banco de dados — nomes conforme env do Portainer
-      DB_HOST: postgres
+      # ── Banco de dados (PostgreSQL compartilhado do servidor) ──────────────
+      DB_HOST: postgres          # nome do container postgres na rede do servidor
       DB_PORT: 5432
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}        # definido no Portainer
+      DB_PASSWORD: ${DB_PASSWORD} # definido no Portainer
+      DB_NAME: ${DB_NAME}        # definido no Portainer (ex: eq08)
       DB_POOL_SIZE: 10
-      # JWT — nomes conforme env do Portainer
-      JWT_SECRET: ${JWT_SECRET}
+      # ── JWT ───────────────────────────────────────────────────────────────
+      JWT_SECRET: ${JWT_SECRET}        # definido no Portainer
       JWT_EXPIRY_DAYS: ${JWT_EXPIRY_DAYS:-7}
-      # Aplicação
+      # ── Aplicação ─────────────────────────────────────────────────────────
       APP_ENV: ${APP_ENV:-production}
     healthcheck:
       test: ["CMD", "python", "-c",
@@ -27,39 +39,3 @@ services:
       timeout: 5s
       start_period: 15s
       retries: 3
-
-  db:
-    image: postgres:15-alpine
-    container_name: gestor_db
-    restart: always
-    environment:
-      POSTGRES_USER: gestor_user
-      POSTGRES_PASSWORD: gestor_password
-      POSTGRES_DB: gestor_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gestor_user -d gestor_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: gestor_redis
-    restart: always
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
-  redis_data:
