@@ -1,0 +1,15 @@
+# Não copiar para o contexto Docker (reduz tamanho do build)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+*.db
+*.sqlite3
+.pytest_cache/
+.coverage
+tests/
+*.egg-info/
+.DS_Store
