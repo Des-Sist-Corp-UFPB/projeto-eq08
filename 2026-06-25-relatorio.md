@@ -6,7 +6,7 @@
 | **Repositório** | https://github.com/des-sist-corp-ufpb/projeto-eq08 |
 | **Aplicação** | https://eq08.dsc.rodrigor.com |
 | **Período de atividade** | 2026-06-10 → 2026-06-25 |
-| **Total de commits** (sem merges, branch main) | 2 |
+| **Total de commits** (sem merges, branch main) | 3 |
 | **Integrantes** | Marcos Vinicius Satro Avelino (@smurlocky), Joao Pedro Martins Pernambuco (@jpsenec) |
 
 ---
@@ -117,7 +117,7 @@
 | Aspecto | Status | Observação |
 |---------|--------|-----------|
 | Arquitetura em camadas | ✅ | controller=✅  service=✅  repository=✅ |
-| Testes automatizados | ❌ | 0 arquivo(s) de teste |
+| Testes automatizados | ❌ | não encontrados |
 | Migrations versionadas | ✅ | 5 migration(s) |
 | Logging | ✅ | @Slf4j / LoggerFactory / logging.getLogger detectado |
 | Autenticação / Segurança | ❌ | não detectado |
@@ -137,7 +137,7 @@
 |---------|---------------|---------------------|-------------------|----------------------|----------------|
 | Marcos Vinicius Satro Avelino (@smurlocky) | 1 | **28** ⚠️ | 9.031 | 7.798 | 100% |
 | Joao Pedro Martins Pernambuco (@jpsenec) | 0 | **4** | 0 | 0 | 0% |
-| *(sem login GitHub)* | 1 | 50% | — | — | — |
+| *(sem login GitHub)* | 2 | 67% | — | — | — |
 
 > **⚠️ Divergência entre commits locais e GitHub API:**
 > - **@smurlocky**: 1 commit(s) na branch `main` vs **28** registrados na API GitHub (commits em branches não mergeadas ou absorvidos via squash-merge sem preservação de autoria).
