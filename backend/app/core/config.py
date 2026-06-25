@@ -7,10 +7,19 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Gestor de Negócio SaaS"
 
-    # JWT Security
-    SECRET_KEY: str
+    # JWT Security — nomes alinhados com o env do Portainer
+    JWT_SECRET: str                      # env: JWT_SECRET
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    JWT_EXPIRY_DAYS: int = 7             # env: JWT_EXPIRY_DAYS
+
+    # Aliases internos para compatibilidade com security.py
+    @property
+    def SECRET_KEY(self) -> str:
+        return self.JWT_SECRET
+
+    @property
+    def REFRESH_TOKEN_EXPIRE_DAYS(self) -> int:
+        return self.JWT_EXPIRY_DAYS
 
     # ─── Banco de dados — lidas do ambiente (Portainer) ───
     # Mapeamento das propriedades Spring do servidor:
