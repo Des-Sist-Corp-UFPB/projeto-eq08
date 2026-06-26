@@ -2,7 +2,7 @@ import asyncio
 import sys
 from app.core.database import engine, Base
 # Import all models to register them on Base.metadata
-from app.models import Tenant, User, RefreshToken, AuditLog
+import app.models  # noqa: F401
 
 
 async def init_models():
