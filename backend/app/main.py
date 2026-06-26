@@ -1,27 +1,13 @@
-from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 from app.api.api import api_router
 from app.core.config import settings
-from app.core.database import engine, Base
-# Import all models so they register on Base.metadata before create_all
-import app.models  # noqa: F401
-
-
-@asynccontextmanager
-async def lifespan(application: FastAPI):
-    """Run database migrations (create tables) on startup."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     description="SaaS de Gestão modular e multitenant para PMEs com arquitetura AI-First.",
-    lifespan=lifespan,
 )
 
 # Setup CORS middleware
