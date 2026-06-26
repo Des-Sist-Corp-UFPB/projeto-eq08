@@ -46,5 +46,26 @@ async def health_check():
     }
 
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi import HTTPException
+import os
+
 # Include all routers
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Serve Frontend SPA
+static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+if os.path.isdir(static_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
+    
+    @app.api_route("/{path_name:path}", methods=["GET"])
+    async def catch_all(path_name: str):
+        if path_name.startswith("api/") or path_name in ["ping", "health", "docs", "openapi.json"]:
+            raise HTTPException(status_code=404, detail="Not Found")
+        
+        file_path = os.path.join(static_dir, path_name)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+            
+        return FileResponse(os.path.join(static_dir, "index.html"))
