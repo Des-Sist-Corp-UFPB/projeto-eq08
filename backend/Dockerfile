@@ -32,6 +32,7 @@ COPY --from=builder /install /usr/local
 
 # Copia código-fonte
 COPY app ./app
+COPY seed_db.py .
 
 # Variáveis de ambiente (credenciais injetadas pelo Portainer em runtime)
 ENV PYTHONUNBUFFERED=1
