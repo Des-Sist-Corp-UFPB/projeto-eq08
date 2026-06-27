@@ -54,6 +54,17 @@ import os
 # Include all routers
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+from fastapi import WebSocket
+
+@app.websocket("/{path_name:path}")
+async def websocket_catch_all(websocket: WebSocket, path_name: str):
+    """
+    Absorve tentativas de conexão WebSocket (como o HMR do Vite cliente ou extensões),
+    aceitando e fechando imediatamente para evitar flood de 'Unsupported upgrade request' no uvicorn.
+    """
+    await websocket.accept()
+    await websocket.close()
+
 # Serve Frontend SPA
 static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
 if os.path.isdir(static_dir):
