@@ -99,3 +99,17 @@ trivy-results.sarif
 HELP.md
 
 *.env
+
+# ---------------------------------------------------------------------------
+# Python / FastAPI / Data
+# ---------------------------------------------------------------------------
+venv/
+backend/venv/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+*.db
+*.sqlite
+*.sqlite3
+.agents/
