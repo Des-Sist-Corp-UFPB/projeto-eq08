@@ -1,8 +1,24 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 from app.api.api import api_router
 from app.core.config import settings
+
+# ── Configuração Profissional de Observabilidade (Logs) ────────────────────
+class IgnoreProxyUpgradeFilter(logging.Filter):
+    """
+    Filtro nativo para suprimir warnings de 'Unsupported upgrade request' 
+    gerados pelo Uvicorn quando proxies reversos (como Caddy/Nginx) tentam 
+    fazer probing com Upgrade: h2c (HTTP/2) não suportado pelo Uvicorn.
+    Garante que o I/O do log não engargale a aplicação.
+    """
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "Unsupported upgrade request" not in record.getMessage()
+
+# Aplica o filtro no logger interno de erros do Uvicorn
+logging.getLogger("uvicorn.error").addFilter(IgnoreProxyUpgradeFilter())
+# ─────────────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
