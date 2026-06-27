@@ -48,4 +48,4 @@ jobs:
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=no \
             "${{ secrets.SSH_USERNAME }}@dsc.rodrigor.com" \
-            "docker compose pull && docker compose up -d"
+            "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"
