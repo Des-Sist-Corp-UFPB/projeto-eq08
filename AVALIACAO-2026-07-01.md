@@ -18,11 +18,16 @@
 
 - ❌ **Nenhum serviço externo declarado** na seção de integração do README.
 
+_Detectado no código, mas **não documentado** no README (não pontua até ser descrito):_
+- ℹ️ Object Storage (S3/MinIO)
+
 ---
 
 ## 3. Cobertura de Testes (≥ 85%)
 
-✅ **Atendido** — 91% (pytest) backend (relatório em `cobertura/`, 64 arquivo(s)).
+✅ **Atendido** — backend linhas 91% (pytest) (relatório em `cobertura/`, 64 arquivo(s)).
+
+> Critério: **cobertura de linhas** ≥ 85% (conforme a orientação). As demais métricas (instruções/ramos) são informativas.
 
 > Observação: a cobertura é lida do relatório commitado pela equipe; não é recalculada nesta avaliação.
 
