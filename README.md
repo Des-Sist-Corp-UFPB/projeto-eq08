@@ -118,42 +118,6 @@ O Copiloto recebe uma pergunta do gestor, monta um contexto em tempo real com da
 
 ---
 
-### Serviço 2: GitHub Container Registry (GHCR) + Deploy SSH Automatizado
-
-**Qual é o serviço externo:**
-O projeto integra-se com o **GitHub Container Registry (GHCR)** (`ghcr.io`) — o registro de imagens Docker nativo do GitHub — e com um **servidor de produção remoto** (`dsc.rodrigor.com`) via SSH para entrega contínua.
-
-**Para que é usado:**
-A integração automatiza todo o ciclo de entrega do software (CI/CD). A cada push na branch `main`, o pipeline:
-1. Faz o build da imagem Docker da aplicação (backend + frontend compilado).
-2. Autentica no GHCR e publica a imagem com a tag `latest`.
-3. Conecta via SSH no servidor de produção e executa o deploy da nova imagem.
-
-Isso elimina a necessidade de intervenção manual no servidor e garante que a versão em produção esteja sempre sincronizada com o código na branch principal.
-
-**Arquivos participantes:**
-
-| Arquivo | Papel |
-|---|---|
-| `.github/workflows/deploy.yml` | Pipeline GitHub Actions — orquestra build, push e deploy |
-| `Dockerfile` | Define como a imagem Docker da aplicação é construída |
-| `docker-compose.yml` | Configuração dos serviços em produção (app, PostgreSQL, Caddy) |
-| `docker-compose.dev.yml` | Configuração dos serviços para desenvolvimento local |
-
-**Como é configurado (variáveis de ambiente / secrets):**
-
-As credenciais sensíveis são armazenadas como **GitHub Actions Secrets** no repositório e nunca expostas no código:
-
-| Secret | Descrição |
-|---|---|
-| `GITHUB_TOKEN` | Token automático do GitHub — autenticação no GHCR (gerado pelo próprio Actions) |
-| `SSH_DEPLOY_KEY` | Chave SSH privada para acesso ao servidor de produção |
-| `SSH_USERNAME` | Usuário SSH do servidor de produção |
-
-No servidor, as variáveis de ambiente da aplicação (credenciais do banco, JWT secret, etc.) são gerenciadas via Portainer e injetadas nos containers Docker em tempo de execução, sem versionamento no repositório.
-
----
-
 ## Cobertura de Testes
 
 **Cobertura total: 91%** (74 testes, backend Python/FastAPI)
