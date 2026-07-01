@@ -95,7 +95,30 @@ A leitura dos logs é protegida por RBAC e restrita aos papéis `OWNER`, `MANAGE
 
 ## Integração com Serviço Externo
 
-### Serviço: GitHub Container Registry (GHCR) + Deploy SSH Automatizado
+### Serviço 1: Google Gemini API (IA Generativa)
+
+**Qual é o serviço externo:**
+O sistema integra-se com a **Google Gemini API** (`google-genai`) — serviço de IA generativa da Google — para alimentar o módulo de **Copiloto Inteligente de Negócios**.
+
+**Para que é usado:**
+O Copiloto recebe uma pergunta do gestor, monta um contexto em tempo real com dados do negócio (faturamento, estoque crítico, fornecedores, escalas do dia) e consulta o modelo `gemini-2.0-flash` para gerar respostas factuais e contextualizadas. Quando a chave não está configurada, o sistema opera em modo heurístico de fallback sem dependência externa.
+
+**Arquivos participantes:**
+
+| Arquivo | Papel |
+|---------|-------|
+| `backend/app/core/gemini.py` | Serviço de integração — `build_business_context()` e `ask_gemini()` |
+| `backend/app/api/endpoints/ai.py` | Endpoint `POST /api/v1/ai/copilot` — orquestra consulta ao Gemini |
+
+**Como é configurado:**
+
+| Variável de Ambiente | Descrição |
+|----------------------|-----------|
+| `GEMINI_API_KEY` | Chave da API Google Gemini (opcional — sem ela, o sistema usa respostas heurísticas) |
+
+---
+
+### Serviço 2: GitHub Container Registry (GHCR) + Deploy SSH Automatizado
 
 **Qual é o serviço externo:**
 O projeto integra-se com o **GitHub Container Registry (GHCR)** (`ghcr.io`) — o registro de imagens Docker nativo do GitHub — e com um **servidor de produção remoto** (`dsc.rodrigor.com`) via SSH para entrega contínua.
@@ -133,7 +156,23 @@ No servidor, as variáveis de ambiente da aplicação (credenciais do banco, JWT
 
 ## Cobertura de Testes
 
-> Relatório de cobertura disponível em `cobertura/` após execução local com:
-> ```bash
-> cd backend && pytest --cov=. --cov-report=html --cov-report=term
-> ```
+**Cobertura total: 91%** (74 testes, backend Python/FastAPI)
+
+O relatório completo está commitado em [`cobertura/backend/index.html`](cobertura/backend/index.html).
+
+| Módulo | Cobertura |
+|--------|-----------|
+| `app/models/` | 100% |
+| `app/schemas/` | 100% |
+| `app/crud/` | ~92% |
+| `app/api/endpoints/` | ~89% |
+| `app/core/` | ~94% |
+| **TOTAL** | **91%** |
+
+Para reproduzir localmente:
+```bash
+cd backend
+JWT_SECRET=local DB_USER=local DB_PASSWORD=local DATABASE_URL=sqlite+aiosqlite:///:memory: \
+  PYTHONPATH=. pytest tests/ --cov=app --cov-report=html --cov-report=term-missing
+cp -r htmlcov/ ../cobertura/backend/
+```
