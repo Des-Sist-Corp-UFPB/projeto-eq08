@@ -8,11 +8,13 @@ interface UserProfile {
   email: string;
   role: string;
   is_active: boolean;
+  sector_type?: string; // propagado do Tenant via join no backend
 }
 
 interface AuthContextType {
   user: UserProfile | null;
   tenantId: string | null;
+  sectorType: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   registerTenant: (payload: any) => Promise<void>;
@@ -24,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [tenantId, setTenantId] = useState<string | null>(localStorage.getItem('tenant_id'));
+  const [sectorType, setSectorType] = useState<string | null>(localStorage.getItem('sector_type'));
   const [loading, setLoading] = useState(true);
 
   // Load user data on startup if token exists
@@ -37,6 +40,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (response.data.tenant_id) {
             localStorage.setItem('tenant_id', response.data.tenant_id);
             setTenantId(response.data.tenant_id);
+          }
+          if (response.data.sector_type) {
+            localStorage.setItem('sector_type', response.data.sector_type);
+            setSectorType(response.data.sector_type);
           }
         } catch (error) {
           console.error('Failed to restore session', error);
@@ -71,6 +78,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('tenant_id', userProfile.tenant_id);
       setTenantId(userProfile.tenant_id);
     }
+    if (userProfile.sector_type) {
+      localStorage.setItem('sector_type', userProfile.sector_type);
+      setSectorType(userProfile.sector_type);
+    }
   };
 
   const registerTenant = async (payload: any) => {
@@ -87,10 +98,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.clear();
     setUser(null);
     setTenantId(null);
+    setSectorType(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, tenantId, loading, login, registerTenant, logout }}>
+    <AuthContext.Provider value={{ user, tenantId, sectorType, loading, login, registerTenant, logout }}>
       {children}
     </AuthContext.Provider>
   );

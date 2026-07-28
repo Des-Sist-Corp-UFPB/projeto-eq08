@@ -11,19 +11,41 @@ from app.crud import (
 )
 from app.models.tenant import Tenant
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate, UserOut
+from app.schemas.user import UserCreate, UserUpdate, UserOut, UserWithSector
 
 router = APIRouter()
 
 
-@router.get("/me", response_model=UserOut)
+@router.get("/me", response_model=UserWithSector)
 async def read_user_me(
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(deps.get_current_user)]
 ):
     """
-    Get current logged in user details.
+    Get current logged in user details, including the tenant sector_type.
+    The sector_type is used by the frontend to activate/deactivate modules.
     """
-    return current_user
+    from sqlalchemy.future import select
+    from app.models.tenant import Tenant as TenantModel
+
+    sector_type = "generic"
+    if current_user.tenant_id:
+        result = await db.execute(
+            select(TenantModel.sector_type).where(TenantModel.id == current_user.tenant_id)
+        )
+        sector_type = result.scalar() or "generic"
+
+    return UserWithSector(
+        id=current_user.id,
+        tenant_id=current_user.tenant_id,
+        name=current_user.name,
+        email=current_user.email,
+        role=current_user.role,
+        is_active=current_user.is_active,
+        created_at=current_user.created_at,
+        updated_at=current_user.updated_at,
+        sector_type=sector_type,
+    )
 
 
 @router.get("/", response_model=List[UserOut])

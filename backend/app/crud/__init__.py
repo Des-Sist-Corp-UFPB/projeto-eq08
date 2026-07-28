@@ -15,6 +15,10 @@ from app.crud.crud_insumo import (
 from app.crud.crud_product import (
     get_product_by_id, get_products_by_tenant, create_product, update_product, delete_product
 )
+from app.crud.crud_product_variant import (
+    create_product_variant, get_product_variant_by_id, get_product_variant_by_sku,
+    get_product_variants_by_product, update_product_variant, delete_product_variant
+)
 from app.crud.crud_order import (
     get_order_by_id, get_orders_by_tenant, create_order_with_stock_deduction
 )

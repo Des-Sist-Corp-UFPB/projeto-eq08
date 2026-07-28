@@ -16,6 +16,11 @@ class Tenant(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(50), default="active")
+    # sector_type define o domínio de negócio do tenant.
+    # Valores válidos: "food_service" | "retail_apparel" | "generic"
+    # Validação de enum é feita via Pydantic (schema), não a nível de DDL,
+    # para facilitar a adição de novos setores sem migrations de schema.
+    sector_type: Mapped[str] = mapped_column(String(50), nullable=False, default="generic")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
         default=get_utc_now

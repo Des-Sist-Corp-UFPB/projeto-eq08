@@ -6,7 +6,7 @@ import {
   Plus, Search, Edit3, Trash2, ShieldAlert, CheckCircle, RefreshCw,
   ArrowRight, UserPlus, Package, BookOpen, ShoppingCart,
   Loader2, DollarSign, Receipt, AlertTriangle, TrendingUp,
-  Truck, Award, Calendar, Sparkles, TrendingDown
+  Truck, Award, Calendar, Sparkles, TrendingDown, Layers
 } from 'lucide-react';
 
 import { InsumosStock } from './InsumosStock';
@@ -59,7 +59,7 @@ interface DashboardMetrics {
   };
 }
 
-type TabType = 'overview' | 'stock' | 'products' | 'pos' | 'users' | 'audit' | 'suppliers' | 'purchases' | 'schedules' | 'analytics';
+type TabType = 'overview' | 'stock' | 'products' | 'pos' | 'users' | 'audit' | 'suppliers' | 'purchases' | 'schedules' | 'analytics' | 'variants';
 
 /* ─── Sparkline SVG Components ─────────────────── */
 const SparkLine: React.FC<{ color?: string; gradientId: string }> = ({
@@ -255,6 +255,7 @@ const TAB_TITLES: Record<TabType, string> = {
   schedules: 'Escalas & Troca de Turnos',
   analytics: 'IA Analytics & Previsões',
   audit: 'Logs de Auditoria',
+  variants: 'Variantes de Produto',
 };
 
 const TAB_SUBTITLES: Record<TabType, string> = {
@@ -268,11 +269,12 @@ const TAB_SUBTITLES: Record<TabType, string> = {
   schedules: 'Gerencie turnos de trabalho, solicite trocas atômicas de escalas e acompanhe afastamentos.',
   analytics: 'Acompanhe previsões de faturamento semanais, reabastecimentos sugeridos e converse com o Copiloto.',
   audit: 'Rastreabilidade total e logs auditáveis de todas as operações críticas.',
+  variants: 'Cadastre e gerencie SKUs, cores, tamanhos e estoque de variantes para produtos de vestuário.',
 };
 
 /* ─── Main Shell ─────────────────────────────────── */
 export const DashboardShell: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, sectorType, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   const [metrics, setMetrics] = useState<DashboardMetrics>({
@@ -481,7 +483,7 @@ export const DashboardShell: React.FC = () => {
                   Gestor<span className="text-violet-400 font-medium">SaaS</span>
                 </h2>
                 <p className="text-[10px] font-medium tracking-wider uppercase" style={{ color: 'rgba(167,139,250,0.55)' }}>
-                  Estoque & Compras
+                  {sectorType === 'food_service' ? 'Restaurante & Food Service' : sectorType === 'retail_apparel' ? 'Varejo & Vestuário' : 'Gestão Empresarial'}
                 </p>
               </div>
             </div>
@@ -490,8 +492,13 @@ export const DashboardShell: React.FC = () => {
           {/* Nav items */}
           <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
             <NavItem icon={<LayoutDashboard size={16} />} label="Painel Geral" tab="overview" activeTab={activeTab} onClick={nav('overview', fetchDashboardMetrics)} />
-            <NavItem icon={<Package size={16} />} label="Estoque & Insumos" tab="stock" activeTab={activeTab} onClick={nav('stock')} />
-            <NavItem icon={<BookOpen size={16} />} label="Produtos & Receitas" tab="products" activeTab={activeTab} onClick={nav('products')} />
+            {sectorType !== 'retail_apparel' && (
+              <NavItem icon={<Package size={16} />} label="Estoque & Insumos" tab="stock" activeTab={activeTab} onClick={nav('stock')} />
+            )}
+            <NavItem icon={<BookOpen size={16} />} label={sectorType === 'retail_apparel' ? "Produtos" : "Produtos & Receitas"} tab="products" activeTab={activeTab} onClick={nav('products')} />
+            {sectorType === 'retail_apparel' && (
+              <NavItem icon={<Layers size={16} />} label="Variantes de Produto" tab="variants" activeTab={activeTab} onClick={nav('variants')} />
+            )}
             <NavItem icon={<ShoppingCart size={16} />} label="Simulador PDV" tab="pos" activeTab={activeTab} onClick={nav('pos')} />
             <NavItem icon={<Award size={16} />} label="Fornecedores" tab="suppliers" activeTab={activeTab} onClick={nav('suppliers')} />
             <NavItem icon={<Truck size={16} />} label="Compras & Pedidos" tab="purchases" activeTab={activeTab} onClick={nav('purchases')} />
@@ -754,6 +761,14 @@ export const DashboardShell: React.FC = () => {
             {/* ══ Other Tabs ══ */}
             {activeTab === 'stock' && <InsumosStock />}
             {activeTab === 'products' && <ProductsRecipes />}
+            {activeTab === 'variants' && (
+              <div className="flex items-center justify-center p-12 glass-panel rounded-2xl border border-white/5">
+                <div className="text-center text-slate-400">
+                  <Layers size={48} className="mx-auto mb-4 opacity-50" />
+                  <p className="text-lg">Módulo de Variantes em Construção</p>
+                </div>
+              </div>
+            )}
             {activeTab === 'pos' && <POSSimulator />}
             {activeTab === 'suppliers' && <SuppliersManagement />}
             {activeTab === 'purchases' && <PurchasesManagement />}

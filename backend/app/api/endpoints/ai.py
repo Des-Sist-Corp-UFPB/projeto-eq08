@@ -1,13 +1,16 @@
 import uuid
-from datetime import date, datetime
+from datetime import date
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 
 from app.api import deps
 from app.core.database import get_db
+from app.core.gemini import ask_gemini
+from app.core.sectors import get_strategy
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.insumo import Insumo
@@ -116,12 +119,34 @@ async def interactive_copilot(
     current_user: Annotated[User, Depends(deps.get_current_tenant_user)]
 ):
     """
-    SaaS Chat Copilot powered by database parsing heuristics.
-    Answers dynamically using real SQLite records from the tenant's context.
+    BIaaS Copilot — Business Intelligence as a Service.
+
+    Fluxo:
+    1. Resolve a SectorStrategy do tenant via SectorRegistry.
+    2. Constrói o contexto de BI com dados reais do banco via strategy.build_bi_context().
+    3. Tenta enviar ao Gemini para resposta enriquecida por LLM.
+    4. Se Gemini não estiver configurado, cai no modo heurístico por intenção (intent matching).
     """
     msg = payload.message.lower().strip()
-    
-    # Intent 1: Vendas/Faturamento (Sales & Revenue)
+
+    # --- Passo 1: resolver estratégia do setor ---
+    strategy = get_strategy(current_tenant.sector_type)
+
+    # --- Passo 2: construir contexto de BI agnóstico de setor ---
+    bi_context = await strategy.build_bi_context(
+        tenant_id=current_tenant.id,
+        tenant_name=current_tenant.name,
+        db=db,
+    )
+
+    # --- Passo 3: tentar resposta via Gemini (BIaaS path) ---
+    gemini_response = await ask_gemini(question=payload.message, business_context=bi_context)
+    if gemini_response:
+        return {"response": gemini_response}
+
+    # --- Passo 4: Fallback heurístico por intenção (sem GEMINI_API_KEY) ---
+
+    # Intent: Vendas/Faturamento
     if any(k in msg for k in ["faturamento", "venda", "faturado", "financeiro", "ganh", "receit"]):
         orders_query = await db.execute(
             select(
@@ -144,8 +169,16 @@ async def interactive_copilot(
         )
         return {"response": response}
 
-    # Intent 2: Estoque/Insumos Críticos (Stock Critical Insumos)
+    # Intent: Estoque/Insumos Críticos (food_service only — outros setores ignoram)
     if any(k in msg for k in ["estoque", "insumo", "falta", "crític", "ruptur", "acab"]):
+        if "insumos" not in strategy.get_active_modules():
+            return {
+                "response": (
+                    "Este módulo de insumos não está disponível no setor configurado para sua empresa.\n"
+                    "Consulte o módulo de **Produtos e Estoque** para verificar disponibilidade de itens."
+                )
+            }
+
         critical_query = await db.execute(
             select(Insumo).filter(
                 Insumo.tenant_id == current_tenant.id,
@@ -164,7 +197,7 @@ async def interactive_copilot(
             rows = ""
             for i in critical_insumos:
                 rows += f"| {i.name} | `{i.current_stock:.1f}` | `{i.minimum_stock:.1f}` | {i.unit} | 🔴 Crítico |\n"
-            
+
             response = (
                 f"### ⚠️ Alertas de Ruptura de Estoque\n\n"
                 f"Identifiquei **{len(critical_insumos)}** insumo(s) abaixo do limite de segurança:\n\n"
@@ -175,11 +208,13 @@ async def interactive_copilot(
             )
         return {"response": response}
 
-    # Intent 3: Escalas/Colaboradores (Shift Schedules today)
+    # Intent: Escalas/Colaboradores
     if any(k in msg for k in ["escala", "turno", "trabalha", "quem", "colaborad", "equipe", "funcion"]):
         today = date.today()
         sched_query = await db.execute(
-            select(EmployeeSchedule).filter(
+            select(EmployeeSchedule)
+            .options(selectinload(EmployeeSchedule.user))
+            .filter(
                 EmployeeSchedule.tenant_id == current_tenant.id,
                 EmployeeSchedule.shift_date == today
             )
@@ -198,7 +233,7 @@ async def interactive_copilot(
                 emp_name = s.user.name if s.user else "N/A"
                 emp_role = s.user.role if s.user else "OPERATOR"
                 rows += f"| {emp_name} | {emp_role} | `{s.start_time} até {s.end_time}` | {s.notes or '-'}\n"
-            
+
             response = (
                 f"### 📅 Escalas de Turnos para Hoje ({today.strftime('%d/%m/%Y')})\n\n"
                 f"Temos **{len(schedules)}** turno(s) ativo(s) agendado(s) para hoje:\n\n"
@@ -209,7 +244,7 @@ async def interactive_copilot(
             )
         return {"response": response}
 
-    # Intent 4: Fornecedores (Suppliers & performance overview)
+    # Intent: Fornecedores
     if any(k in msg for k in ["fornecedor", "parceir", "scorecard", "compr"]):
         sup_query = await db.execute(select(Supplier).filter(Supplier.tenant_id == current_tenant.id))
         suppliers = sup_query.scalars().all()
@@ -224,7 +259,7 @@ async def interactive_copilot(
             rows = ""
             for s in suppliers:
                 rows += f"| {s.name} | {s.contact_name or '-'} | {s.email or '-'} | {s.phone or '-'}\n"
-            
+
             response = (
                 f"### 🤝 Nossos Fornecedores Cadastrados\n\n"
                 f"Identifiquei **{len(suppliers)}** parceiro(s) ativo(s) na empresa:\n\n"
@@ -235,15 +270,14 @@ async def interactive_copilot(
             )
         return {"response": response}
 
-    # Fallback response
+    # Fallback final — sugestões customizadas pelo setor do tenant
+    suggestions = strategy.get_copilot_suggestions()
+    bullets = "\n".join(f"- *\"{s}\"*" for s in suggestions)
     response = (
-        f"Olá, **{current_user.name}**! Sou o **Copiloto Inteligente do Gestor SaaS** 🤖.\n\n"
+        f"Olá, **{current_user.name}**! Sou o **Copiloto de Negócios** 🤖.\n\n"
         f"Posso extrair respostas diretamente do banco de dados em tempo real. "
-        f"Experimente me perguntar:\n"
-        f"- 📊 *\"Qual o faturamento bruto atual?\"*\n"
-        f"- ⚠️ *\"Quais insumos estão críticos de estoque?\"*\n"
-        f"- 📅 *\"Quem está escalado para trabalhar hoje?\"*\n"
-        f"- 🤝 *\"Quais fornecedores temos cadastrados?\"*\n\n"
+        f"Aqui estão sugestões para o seu setor (**{current_tenant.sector_type}**):\n\n"
+        f"{bullets}\n\n"
         f"Como posso ajudar a otimizar sua operação hoje?"
     )
     return {"response": response}

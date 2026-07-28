@@ -46,7 +46,11 @@ async def register_tenant(
         )
 
     # 2. Create the tenant
-    tenant_in = TenantCreate(name=obj_in.company_name, slug=obj_in.slug)
+    tenant_in = TenantCreate(
+        name=obj_in.company_name,
+        slug=obj_in.slug,
+        sector_type=obj_in.sector_type,
+    )
     tenant = await create_tenant(db, tenant_in)
     
     # 3. Create the OWNER user

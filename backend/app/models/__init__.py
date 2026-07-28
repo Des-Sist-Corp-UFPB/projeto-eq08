@@ -4,6 +4,7 @@ from app.models.audit import AuditLog
 from app.models.category import Category
 from app.models.insumo import Insumo
 from app.models.product import Product, ProductIngredient
+from app.models.product_variant import ProductVariant
 from app.models.order import Order, OrderItem
 from app.models.stock_movement import StockMovement
 from app.models.supplier import Supplier

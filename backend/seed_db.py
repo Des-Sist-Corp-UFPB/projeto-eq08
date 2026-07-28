@@ -23,7 +23,8 @@ async def seed_data():
         # 1. Create Tenant
         tenant = Tenant(
             name="Sabores & Cia Ltda",
-            slug="sabores-cia"
+            slug="sabores-cia",
+            sector_type="food_service"
         )
         session.add(tenant)
         await session.flush()
@@ -31,10 +32,10 @@ async def seed_data():
         # 2. Create Users
         admin_user = User(
             tenant_id=tenant.id,
-            name="João Silva (Gerente)",
+            name="João Silva (Proprietário)",
             email="joao@saborescia.com",
             hashed_password=get_password_hash("admin123"),
-            role="MANAGER"
+            role="OWNER"
         )
         op_user = User(
             tenant_id=tenant.id,
@@ -182,7 +183,7 @@ async def seed_data():
         print("\n=============================================")
         print("🏢 Empresa: Sabores & Cia Ltda")
         print("\n🔑 Usuários Criados:")
-        print("1. Gerente (Acesso Total):")
+        print("1. Proprietário (Acesso Total):")
         print("   Email: joao@saborescia.com")
         print("   Senha: admin123")
         print("\n2. Operador (PDV/Operacional):")
