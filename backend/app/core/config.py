@@ -48,6 +48,9 @@ class Settings(BaseSettings):
             )
         return self
 
+    # Gemini AI
+    GEMINI_API_KEY: Optional[str] = None
+
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
     USE_REDIS: bool = False

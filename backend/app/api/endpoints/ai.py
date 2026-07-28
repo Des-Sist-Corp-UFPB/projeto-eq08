@@ -140,7 +140,11 @@ async def interactive_copilot(
     )
 
     # --- Passo 3: tentar resposta via Gemini (BIaaS path) ---
-    gemini_response = await ask_gemini(question=payload.message, business_context=bi_context)
+    gemini_response = await ask_gemini(
+        question=payload.message, 
+        business_context=bi_context,
+        history=payload.history
+    )
     if gemini_response:
         return {"response": gemini_response}
 

@@ -14,7 +14,7 @@ SectorStrategy — ver app/core/sectors/. Este módulo é agnóstico de setor.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, List, Any
 
 from google import genai
 from google.genai import types
@@ -46,7 +46,7 @@ Não use emojis excessivos.
 _DEFAULT_MODEL = "gemini-2.0-flash"
 
 
-async def ask_gemini(question: str, business_context: str) -> Optional[str]:
+async def ask_gemini(question: str, business_context: str, history: Optional[List[Any]] = None) -> Optional[str]:
     """
     Chama a API Gemini com o contexto do negócio e a pergunta do usuário.
 
@@ -65,9 +65,19 @@ async def ask_gemini(question: str, business_context: str) -> Optional[str]:
         client = genai.Client(api_key=api_key)
         system_with_context = _SYSTEM_PROMPT.format(context=business_context)
 
+        # Constrói o histórico da conversa no formato do Google GenAI
+        contents = []
+        if history:
+            for msg in history:
+                # msg.role is 'user' or 'model'
+                contents.append(types.Content(role=msg.role, parts=[types.Part.from_text(text=msg.content)]))
+                
+        # Adiciona a pergunta atual por último
+        contents.append(types.Content(role="user", parts=[types.Part.from_text(text=question)]))
+
         response = client.models.generate_content(
             model=_DEFAULT_MODEL,
-            contents=question,
+            contents=contents,
             config=types.GenerateContentConfig(
                 system_instruction=system_with_context,
                 temperature=0.2,        # baixo para respostas factuais

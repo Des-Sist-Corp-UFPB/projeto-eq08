@@ -38,8 +38,14 @@ class AIRecommendationApplyOut(BaseModel):
     created_order_id: Optional[uuid.UUID] = None
 
 
+class ChatHistoryItem(BaseModel):
+    role: str
+    content: str
+
+
 class CopilotRequest(BaseModel):
     message: str
+    history: Optional[List[ChatHistoryItem]] = Field(default_factory=list)
 
 
 class CopilotResponse(BaseModel):

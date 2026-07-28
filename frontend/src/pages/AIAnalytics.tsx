@@ -145,7 +145,16 @@ export const AIAnalytics: React.FC = () => {
       // Pequeno atraso simulado de pesquisa visualmente atraente
       await new Promise(resolve => setTimeout(resolve, 600));
       
-      const res = await api.post('/ai/copilot', { message: text });
+      // Monta o histórico (excluindo a mensagem atual e focando nas últimas 10)
+      const recentHistory = messages.slice(-10).map(m => ({
+        role: m.sender === 'user' ? 'user' : 'model',
+        content: m.text
+      }));
+
+      const res = await api.post('/ai/copilot', { 
+        message: text,
+        history: recentHistory
+      });
       const fullText = res.data.response;
       
       setCopilotTyping(false);
