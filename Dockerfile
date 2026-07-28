@@ -46,6 +46,10 @@ COPY --from=backend-builder /install /usr/local
 # Copia código-fonte do backend
 COPY backend/app ./app
 COPY backend/seed_db.py .
+COPY backend/seed_demo_chat.py .
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini .
+COPY backend/entrypoint.sh .
 
 # Copia o build do frontend para a pasta static do backend
 COPY --from=frontend-builder /app/dist ./static
@@ -59,4 +63,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/ping')" || exit 1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["./entrypoint.sh"]
