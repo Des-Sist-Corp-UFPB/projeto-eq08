@@ -9,7 +9,7 @@ backend_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 if backend_path not in sys.path:
     sys.path.insert(0, backend_path)
 
-from seed_db import seed_data
+from seed_demo_chat import seed_demo
 from app.core.sectors import SectorRegistry
 from app.schemas.tenant import SECTOR_LABELS
 
@@ -31,7 +31,7 @@ async def seed_database():
     Roda a função seed_data para popular o banco de dados.
     """
     try:
-        await seed_data()
+        await seed_demo()
         return {"message": "Banco populado com sucesso!"}
     except Exception as e:
         error_details = traceback.format_exc()

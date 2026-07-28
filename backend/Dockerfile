@@ -33,6 +33,7 @@ COPY --from=builder /install /usr/local
 # Copia código-fonte e scripts
 COPY app ./app
 COPY seed_db.py .
+COPY seed_demo_chat.py .
 COPY alembic ./alembic
 COPY alembic.ini .
 COPY entrypoint.sh .
