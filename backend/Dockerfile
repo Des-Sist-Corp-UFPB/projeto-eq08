@@ -30,9 +30,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copia pacotes instalados do builder
 COPY --from=builder /install /usr/local
 
-# Copia código-fonte
+# Copia código-fonte e scripts
 COPY app ./app
 COPY seed_db.py .
+COPY alembic ./alembic
+COPY alembic.ini .
+COPY entrypoint.sh .
 
 # Variáveis de ambiente (credenciais injetadas pelo Portainer em runtime)
 ENV PYTHONUNBUFFERED=1
@@ -43,4 +46,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/ping')" || exit 1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["./entrypoint.sh"]
