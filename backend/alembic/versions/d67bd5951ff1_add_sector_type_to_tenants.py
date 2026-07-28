@@ -20,8 +20,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.add_column('tenants', sa.Column('sector_type', sa.String(length=50), nullable=False, server_default='generic'))
-    # ### end Alembic commands ###
+    from sqlalchemy.engine.reflection import Inspector
+    bind = op.get_bind()
+    
+    # Executa a introspecção no modo async (síncrono sob o pano do alembic)
+    if bind.dialect.name == 'postgresql' or bind.dialect.name == 'sqlite':
+        insp = sa.inspect(bind)
+        columns = [c['name'] for c in insp.get_columns('tenants')]
+        if 'sector_type' not in columns:
+            op.add_column('tenants', sa.Column('sector_type', sa.String(length=50), nullable=False, server_default='generic'))
 
 
 def downgrade() -> None:

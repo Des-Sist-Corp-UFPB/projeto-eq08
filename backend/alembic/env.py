@@ -18,7 +18,9 @@ import app.models  # ensure models are loaded
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option("sqlalchemy.url", str(settings.DATABASE_URL))
+# Replace % with %% to prevent configparser interpolation errors if password contains %
+safe_url = str(settings.DATABASE_URL).replace('%', '%%')
+config.set_main_option("sqlalchemy.url", safe_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
