@@ -42,8 +42,8 @@ Não use emojis excessivos.
 === FIM DO CONTEXTO ===
 """
 
-# Modelo padrão — gemini-2.0-flash é rápido e tem contexto largo suficiente
-_DEFAULT_MODEL = "gemini-2.0-flash"
+# Modelo padrão — alterado para gemini-1.5-flash pois a cota gratuita do 2.0-flash se esgota rapidamente
+_DEFAULT_MODEL = "gemini-1.5-flash"
 
 
 async def ask_gemini(question: str, business_context: str, history: Optional[List[Any]] = None) -> Optional[str]:
