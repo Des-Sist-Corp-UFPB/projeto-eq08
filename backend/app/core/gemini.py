@@ -42,8 +42,8 @@ Não use emojis excessivos.
 === FIM DO CONTEXTO ===
 """
 
-# Modelo padrão — alterado para gemini-1.5-flash pois a cota gratuita do 2.0-flash se esgota rapidamente
-_DEFAULT_MODEL = "gemini-1.5-flash"
+# Modelo padrão — alterado para gemini-3.5-flash-lite conforme limites do Google AI Studio
+_DEFAULT_MODEL = "gemini-3.5-flash-lite"
 
 
 async def ask_gemini(question: str, business_context: str, history: Optional[List[Any]] = None) -> Optional[str]:
