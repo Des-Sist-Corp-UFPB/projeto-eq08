@@ -10,7 +10,7 @@ KPIs: faturamento bruto, ticket médio, contagem de pedidos, CMV, estoque críti
 from __future__ import annotations
 
 import uuid
-from datetime import date
+from datetime import date, timedelta
 
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -55,7 +55,7 @@ class FoodServiceStrategy(SectorStrategy):
             "total_pedidos": "Contagem total de pedidos realizados",
             "insumos_criticos": "Insumos com estoque abaixo do mínimo de segurança",
             "fornecedores_ativos": "Parceiros cadastrados na plataforma",
-            "colaboradores_hoje": "Colaboradores escalados para o dia atual",
+            "colaboradores_semana": "Colaboradores escalados para os próximos 7 dias",
         }
 
     def get_copilot_suggestions(self) -> list[str]:
@@ -105,20 +105,24 @@ class FoodServiceStrategy(SectorStrategy):
         )
         suppliers_count = int(sup_result.scalar() or 0)
 
-        # --- Escalas de hoje ---
+        # --- Escalas da Semana (Hoje + 7 dias) ---
         today = date.today()
+        next_week = today + timedelta(days=7)
         sched_result = await db.execute(
             select(EmployeeSchedule, User)
             .join(User, EmployeeSchedule.user_id == User.id)
             .filter(
                 EmployeeSchedule.tenant_id == tenant_id,
-                EmployeeSchedule.shift_date == today,
+                EmployeeSchedule.shift_date >= today,
+                EmployeeSchedule.shift_date <= next_week,
             )
+            .order_by(EmployeeSchedule.shift_date, EmployeeSchedule.start_time)
         )
         today_schedules = [
             {
                 "employee_name": user.name,
                 "role": user.role,
+                "date": sched.shift_date.strftime("%d/%m/%Y"),
                 "start_time": sched.start_time,
                 "end_time": sched.end_time,
             }
@@ -150,16 +154,16 @@ class FoodServiceStrategy(SectorStrategy):
             "",
             f"# Fornecedores cadastrados: {suppliers_count}",
             "",
-            "# Escalas de hoje",
+            "# Escalas cadastradas (Hoje até os próximos 7 dias)",
         ]
 
         if today_schedules:
             for s in today_schedules:
                 lines.append(
-                    f"  - {s['employee_name']} ({s['role']}): "
+                    f"  - Data: {s['date']} | {s['employee_name']} ({s['role']}): "
                     f"{s['start_time']} até {s['end_time']}"
                 )
         else:
-            lines.append("  - Nenhum colaborador escalado para hoje.")
+            lines.append("  - Nenhum colaborador escalado para os próximos 7 dias.")
 
         return "\n".join(lines)
