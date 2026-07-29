@@ -32,6 +32,14 @@ services:
       JWT_EXPIRY_DAYS: ${JWT_EXPIRY_DAYS:-7}
       # ── Aplicação ─────────────────────────────────────────────────────────
       APP_ENV: ${APP_ENV:-production}
+      # ── OpenTelemetry ──────────────────────────────────────────────────
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-dsc-eq08}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-https://otel.dsc.rodrigor.com}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS}
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: otlp
     healthcheck:
       test: ["CMD", "python", "-c",
              "import urllib.request; urllib.request.urlopen('http://localhost:8080/ping')"]

@@ -27,7 +27,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY backend/requirements.txt .
 RUN pip install --upgrade pip \
-    && pip install --prefix=/install --no-cache-dir -r requirements.txt aiofiles
+    && pip install --prefix=/install --no-cache-dir -r requirements.txt aiofiles \
+    && PYTHONPATH=/install/lib/python3.11/site-packages pip install --prefix=/install --no-cache-dir opentelemetry-distro opentelemetry-exporter-otlp \
+    && PYTHONPATH=/install/lib/python3.11/site-packages /install/bin/opentelemetry-bootstrap -a install --prefix=/install
 
 # ──────────────────────────────────────────────
 # Stage 3: Runtime Unificado (Backend + Frontend)

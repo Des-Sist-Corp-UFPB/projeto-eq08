@@ -26,6 +26,11 @@ services:
       JWT_SECRET: dev-secret-key-nao-usar-em-producao
       JWT_EXPIRY_DAYS: 7
       APP_ENV: development
+      # ── OpenTelemetry (desativado por padrão em dev) ───────────────────
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-dsc-eq08}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
     depends_on:
       db:
         condition: service_healthy
