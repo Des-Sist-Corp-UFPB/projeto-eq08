@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { trackEvent } from '../services/tracking';
 
 interface UserProfile {
   id: string;
@@ -82,15 +83,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('sector_type', userProfile.sector_type);
       setSectorType(userProfile.sector_type);
     }
+
+    trackEvent('login-success', { role: userProfile.role, sector: userProfile.sector_type || 'unknown' });
   };
 
   const registerTenant = async (payload: any) => {
     await api.post('/auth/register-tenant', payload);
+    trackEvent('register-tenant', { sector: payload.sector_type || 'unknown' });
     // After registration, auto-login with credentials
     await login(payload.admin_email, payload.admin_password);
   };
 
   const logout = () => {
+    trackEvent('logout');
     const token = localStorage.getItem('refresh_token');
     if (token) {
       api.post(`/auth/logout?refresh_token=${token}`).catch(() => {});

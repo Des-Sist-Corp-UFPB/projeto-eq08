@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
+import { trackEvent } from '../services/tracking';
 import {
   Shield, LayoutDashboard, Users, History, LogOut,
   Plus, Search, Edit3, Trash2, ShieldAlert, CheckCircle, RefreshCw,
@@ -413,6 +414,7 @@ export const DashboardShell: React.FC = () => {
   /* ─── Sidebar nav helper ─── */
   const nav = (tab: TabType, cb?: () => void) => () => {
     setActiveTab(tab);
+    trackEvent('navigate-module', { module: tab });
     cb?.();
   };
 

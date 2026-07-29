@@ -42,7 +42,7 @@ services:
       OTEL_LOGS_EXPORTER: otlp
     healthcheck:
       test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:8080/ping')"]
+             "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
       interval: 30s
       timeout: 5s
       start_period: 15s

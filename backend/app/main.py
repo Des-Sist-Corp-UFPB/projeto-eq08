@@ -54,12 +54,37 @@ async def ping():
 async def health_check():
     """
     Service health check endpoint.
+    Verifica conectividade real com o banco de dados (SELECT 1).
+    Retorna 503 se o banco estiver inacessível.
     """
-    return {
-        "status": "healthy",
-        "project": settings.PROJECT_NAME,
-        "version": "1.0.0"
-    }
+    from sqlalchemy import text
+    from app.core.database import SessionLocal
+
+    db_status = "healthy"
+    http_status = 200
+
+    try:
+        async with SessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+    except Exception as exc:
+        db_status = "unreachable"
+        http_status = 503
+        logging.getLogger("uvicorn.error").warning(
+            "Healthcheck DB falhou: %s", str(exc)
+        )
+
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=http_status,
+        content={
+            "status": "healthy" if http_status == 200 else "unhealthy",
+            "project": settings.PROJECT_NAME,
+            "version": "1.0.0",
+            "checks": {
+                "database": db_status,
+            },
+        },
+    )
 
 
 from fastapi.staticfiles import StaticFiles
