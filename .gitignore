@@ -10,6 +10,11 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+./backend/__pycache__/
+backend/static/
+**/__pycache__/
+*/__pycache__
+
 # ---------------------------------------------------------------------------
 # IDEs
 # ---------------------------------------------------------------------------
@@ -92,3 +97,20 @@ trivy-results.sarif
 *.seed
 *.pid.lock
 HELP.md
+
+*.env
+
+# ---------------------------------------------------------------------------
+# Python / FastAPI / Data
+# ---------------------------------------------------------------------------
+venv/
+backend/venv/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+*.db
+*.sqlite
+*.sqlite3
+.agents/
+node_modules/

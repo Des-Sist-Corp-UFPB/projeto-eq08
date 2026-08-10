@@ -1,0 +1,82 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.dev.yml — DESENVOLVIMENTO LOCAL
+#
+# Uso: docker compose -f docker-compose.dev.yml up
+#
+# Sobe PostgreSQL e Redis locais para desenvolvimento sem depender do servidor.
+# ─────────────────────────────────────────────────────────────────────────────
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    container_name: eq08_backend_dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: eq08
+      DB_PASSWORD: eq08_dev
+      DB_NAME: eq08
+      DB_POOL_SIZE: 5
+      JWT_SECRET: dev-secret-key-nao-usar-em-producao
+      JWT_EXPIRY_DAYS: 7
+      APP_ENV: development
+      # ── OpenTelemetry (desativado por padrão em dev) ───────────────────
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-dsc-eq08}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+      OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER:-}
+      OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER:-}
+      OTEL_LOGS_EXPORTER: ${OTEL_LOGS_EXPORTER:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  db:
+    image: postgres:15-alpine
+    container_name: eq08_db_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: eq08
+      POSTGRES_PASSWORD: eq08_dev
+      POSTGRES_DB: eq08
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eq08 -d eq08"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: eq08_redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:

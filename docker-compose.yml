@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — PRODUÇÃO (servidor dsc.rodrigor.com)
+#
+# Infraestrutura do servidor (gerenciada pelo professor/admin):
+#   - Caddy  : proxy reverso TLS, roteia <equipe>.dsc.rodrigor.com → 127.0.0.1:8108
+#   - postgres: instância compartilhada (network: servidor)
+#   - Portainer: gerencia este compose via interface web
+#
+# A equipe NÃO sobe PostgreSQL nem Redis próprios aqui.
+# As credenciais abaixo são injetadas pelo Portainer (Environment > env vars).
+# ─────────────────────────────────────────────────────────────────────────────
+version: '3.8'
+
+services:
+  backend:
+    image: ghcr.io/des-sist-corp-ufpb/projeto-eq08:latest
+    container_name: eq08_backend
+    restart: always
+    ports:
+      # Caddy faz proxy de <subdominio>:443 → 127.0.0.1:8108 → container:8080
+      - "127.0.0.1:8108:8080"
+    environment:
+      # ── Banco de dados (PostgreSQL compartilhado do servidor) ──────────────
+      DB_HOST: postgres          # nome do container postgres na rede do servidor
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}        # definido no Portainer
+      DB_PASSWORD: ${DB_PASSWORD} # definido no Portainer
+      DB_NAME: ${DB_NAME}        # definido no Portainer (ex: eq08)
+      DB_POOL_SIZE: 10
+      # ── JWT ───────────────────────────────────────────────────────────────
+      JWT_SECRET: ${JWT_SECRET}        # definido no Portainer
+      JWT_EXPIRY_DAYS: ${JWT_EXPIRY_DAYS:-7}
+      # ── Aplicação ─────────────────────────────────────────────────────────
+      APP_ENV: ${APP_ENV:-production}
+      # ── OpenTelemetry ──────────────────────────────────────────────────
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-dsc-eq08}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-https://otel.dsc.rodrigor.com}
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS}
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: otlp
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3

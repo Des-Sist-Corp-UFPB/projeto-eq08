@@ -1,343 +1,154 @@
-# Sistema Mercado — Projeto Base DSC/UFPB
+# gestor_negocio
 
-Projeto base (boilerplate) para a disciplina **Desenvolvimento de Sistemas Corporativos**.
+Este repositório tem como objetivo armazenar o código base de um software para auxiliar na gestão de pequenos negócios.
 
-**Professor**: Rodrigo Rebouças | **UFPB — Campus IV**
+Plataforma SaaS modular, moderna e multitenant para Gestão de PMEs (Pequenos e Médios Negócios), com arquitetura preparada para recursos e automações inteligentes baseadas em IA (*AI-First*).
 
 ---
 
-## Tecnologias
+## 🎥 Vídeo de Apresentação do Projeto
 
-| Camada | Tecnologia |
+**Assista ao vídeo da apresentação final no YouTube:**
+👉 [Vídeo de Apresentação do Projeto - Gestor de Negócio PME](https://youtu.be/j37UqXbVLQY)
+
+> [!NOTE]
+> **Observações importantes para a avaliação:**
+> - O aluno Marcos não conseguiu usar a câmera pois estava sem webcam e o aplicativo para usar o celular como câmera estava dando incompatibilidade com o sistema da máquina dele.
+> - Pedimos perdão pelo vídeo não estar em tela cheia, pois o OBS Studio que foi utilizado para gravar estava bugando a resolução quando colocado em modo tela cheia.
+
+---
+
+## Stack Tecnológica
+
+- **Backend:** Python 3.14+, FastAPI, SQLAlchemy (async), Alembic, PostgreSQL, Pytest
+- **Frontend:** React, TypeScript, Vite, TanStack Query, React Router, TailwindCSS
+- **Infraestrutura:** Docker, Docker Compose, Caddy (proxy reverso), GitHub Actions (CI/CD)
+
+---
+
+## Log de Auditoria
+
+### O que é auditado
+
+O sistema registra automaticamente as seguintes ações de usuário:
+
+| Ação | Descrição |
+|---|---|
+| `USER_LOGIN` | Login bem-sucedido no sistema |
+| `REFRESH_TOKEN` | Renovação de token de acesso |
+| `USER_CREATE` | Criação de novo colaborador |
+| `USER_UPDATE` | Atualização de dados de usuário |
+| `USER_DELETE` | Exclusão de usuário |
+| `CATEGORY_CREATE` | Criação de categoria de produto |
+| `CATEGORY_UPDATE` | Atualização de categoria |
+| `CATEGORY_DELETE` | Exclusão de categoria |
+| `PRODUCT_CREATE` | Cadastro de produto |
+| `PRODUCT_UPDATE` | Atualização de produto |
+| `PRODUCT_DELETE` | Exclusão de produto |
+| `INSUMO_CREATE` | Cadastro de insumo/matéria-prima |
+| `INSUMO_UPDATE` | Atualização de insumo |
+| `INSUMO_DELETE` | Exclusão de insumo |
+| `STOCK_MOVEMENT` | Movimentação manual de estoque |
+| `SUPPLIER_CREATE` | Cadastro de fornecedor |
+| `SUPPLIER_UPDATE` | Atualização de fornecedor |
+| `SUPPLIER_DELETE` | Exclusão de fornecedor |
+| `PURCHASE_ORDER_CREATE` | Criação de ordem de compra |
+| `PURCHASE_ORDER_STATUS_UPDATE` | Atualização de status de ordem de compra |
+| `ORDER_CREATE` | Registro de pedido/venda |
+| `SCHEDULE_CREATE` | Criação de escala de turno |
+| `SCHEDULE_UPDATE` | Atualização de escala |
+| `SCHEDULE_DELETE` | Exclusão de escala |
+| `AI_RECOMMENDATION_APPLY` | Aplicação de recomendação de IA |
+| `AI_RECOMMENDATION_DISMISS` | Descarte de recomendação de IA |
+
+### Onde fica armazenado
+
+Os registros são persistidos na tabela **`audit_logs`** do banco de dados PostgreSQL (ou SQLite no ambiente de desenvolvimento/testes). Principais campos:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | UUID | Identificador único do registro |
+| `tenant_id` | UUID (FK) | Empresa à qual o evento pertence (isolamento multitenant) |
+| `user_id` | UUID (FK, nullable) | Usuário que executou a ação |
+| `action` | String(255) | Código da ação auditada (ex: `USER_LOGIN`) |
+| `table_name` | String(100) | Tabela afetada pela ação (ex: `users`) |
+| `record_id` | String(255) | ID do registro afetado |
+| `before_state` | JSON | Estado do objeto antes da modificação |
+| `after_state` | JSON | Estado do objeto após a modificação |
+| `ip_address` | String(45) | Endereço IP do solicitante |
+| `created_at` | DateTime (UTC) | Timestamp do evento |
+
+### Como foi implementado
+
+A auditoria foi implementada via **serviço dedicado** (`create_audit_log`): uma função assíncrona reutilizável que é chamada explicitamente nos endpoints da API imediatamente após cada operação de escrita bem-sucedida. Não há middleware global — cada endpoint é responsável por registrar sua própria ação, garantindo rastreabilidade granular e controle fino sobre o que é auditado.
+
+A leitura dos logs é protegida por RBAC e restrita aos papéis `OWNER`, `MANAGER` e `SUPERVISOR`.
+
+### Arquivos participantes
+
+| Arquivo | Papel |
+|---|---|
+| `backend/app/models/audit.py` | Model SQLAlchemy — define a tabela `audit_logs` |
+| `backend/app/crud/crud_audit.py` | Serviço de auditoria — `create_audit_log()` e `get_audit_logs_by_tenant()` |
+| `backend/app/api/endpoints/audit.py` | Endpoint REST `GET /api/v1/audit/` — listagem paginada dos logs |
+| `backend/app/api/endpoints/auth.py` | Registra eventos de login e refresh de token |
+| `backend/app/api/endpoints/users.py` | Registra criação, atualização e exclusão de usuários |
+| `backend/app/api/endpoints/categories.py` | Registra operações sobre categorias |
+| `backend/app/api/endpoints/products.py` | Registra operações sobre produtos |
+| `backend/app/api/endpoints/insumos.py` | Registra operações sobre insumos e movimentações de estoque |
+| `backend/app/api/endpoints/suppliers.py` | Registra operações sobre fornecedores |
+| `backend/app/api/endpoints/purchases.py` | Registra criação e atualização de ordens de compra |
+| `backend/app/api/endpoints/orders.py` | Registra criação de pedidos/vendas |
+| `backend/app/api/endpoints/schedules.py` | Registra operações sobre escalas de turnos |
+| `backend/app/api/endpoints/ai.py` | Registra aplicação e descarte de recomendações de IA |
+| `backend/app/api/deps.py` | Define `RoleChecker` — controla o acesso RBAC ao endpoint de listagem |
+
+---
+
+## Integração com Serviço Externo
+
+### Serviço 1: Google Gemini API (IA Generativa)
+
+**Qual é o serviço externo:**
+O sistema integra-se com a **Google Gemini API** (`google-genai`) — serviço de IA generativa da Google — para alimentar o módulo de **Copiloto Inteligente de Negócios**.
+
+**Para que é usado:**
+O Copiloto recebe uma pergunta do gestor, monta um contexto em tempo real com dados do negócio (faturamento, estoque crítico, fornecedores, escalas do dia) e consulta o modelo `gemini-2.0-flash` para gerar respostas factuais e contextualizadas. Quando a chave não está configurada, o sistema opera em modo heurístico de fallback sem dependência externa.
+
+**Arquivos participantes:**
+
+| Arquivo | Papel |
+|---------|-------|
+| `backend/app/core/gemini.py` | Serviço de integração — `build_business_context()` e `ask_gemini()` |
+| `backend/app/api/endpoints/ai.py` | Endpoint `POST /api/v1/ai/copilot` — orquestra consulta ao Gemini |
+
+**Como é configurado:**
+
+| Variável de Ambiente | Descrição |
+|----------------------|-----------|
+| `GEMINI_API_KEY` | Chave da API Google Gemini (opcional — sem ela, o sistema usa respostas heurísticas) |
+
+---
+
+## Cobertura de Testes
+
+**Cobertura total: 91%** (74 testes, backend Python/FastAPI)
+
+O relatório completo está commitado em [`cobertura/backend/index.html`](cobertura/backend/index.html).
+
+| Módulo | Cobertura |
 |--------|-----------|
-| Backend | Java 21 + Spring Boot 3.4.5 |
-| Templates | Thymeleaf + HTMX 2.0 |
-| Frontend | Bootstrap 5.3 |
-| Banco | PostgreSQL 16 |
-| Migrações | Flyway 11 |
-| Segurança | Spring Security 6 |
-| Build | Maven 3.9 |
-| CI/CD | GitHub Actions |
+| `app/models/` | 100% |
+| `app/schemas/` | 100% |
+| `app/crud/` | ~92% |
+| `app/api/endpoints/` | ~89% |
+| `app/core/` | ~94% |
+| **TOTAL** | **91%** |
 
----
-
-## Guia de Instalação para Alunos
-
-### Passo 1 — Instale o Java 21
-
-O projeto requer Java 21. Recomendamos o **Eclipse Temurin** (distribuição gratuita da Adoptium).
-
-**Windows / macOS / Linux:**
-1. Acesse https://adoptium.net/temurin/releases/?version=21
-2. Baixe o instalador para seu sistema operacional
-3. Execute o instalador e siga as instruções
-
-**Verificar se está correto:**
+Para reproduzir localmente:
 ```bash
-java -version
-# Esperado: openjdk version "21.x.x" ...
+cd backend
+JWT_SECRET=local DB_USER=local DB_PASSWORD=local DATABASE_URL=sqlite+aiosqlite:///:memory: \
+  PYTHONPATH=. pytest tests/ --cov=app --cov-report=html --cov-report=term-missing
+cp -r htmlcov/ ../cobertura/backend/
 ```
-
-> **Dica para Windows:** durante a instalação, marque a opção *"Add to PATH"* e *"Set JAVA_HOME"*.
-
----
-
-### Passo 2 — Instale o Maven
-
-O Maven é a ferramenta de build do projeto.
-
-**macOS (com Homebrew):**
-```bash
-brew install maven
-```
-
-**Windows:**
-1. Acesse https://maven.apache.org/download.cgi
-2. Baixe o arquivo `apache-maven-3.x.x-bin.zip`
-3. Extraia para uma pasta (ex.: `C:\maven`)
-4. Adicione `C:\maven\bin` à variável de ambiente `PATH`
-
-**Linux (Ubuntu/Debian):**
-```bash
-sudo apt install maven
-```
-
-**Verificar:**
-```bash
-mvn -version
-# Esperado: Apache Maven 3.x.x
-```
-
----
-
-### Passo 3 — Instale o Docker Desktop
-
-O Docker sobe o banco de dados PostgreSQL sem precisar instalar nada manualmente.
-
-1. Acesse https://www.docker.com/products/docker-desktop/
-2. Baixe e instale o Docker Desktop para seu sistema
-3. Abra o Docker Desktop e aguarde ele inicializar (ícone na barra de tarefas)
-
-**Verificar:**
-```bash
-docker -v
-# Esperado: Docker version 27.x.x ...
-```
-
-> **Importante:** o Docker Desktop deve estar **em execução** sempre que você for rodar o projeto.
-
----
-
-### Passo 4 — Clone o repositório
-
-```bash
-git clone <URL-DO-REPOSITÓRIO>
-cd base_projeto
-```
-
-> Substitua `<URL-DO-REPOSITÓRIO>` pela URL fornecida pelo professor.
-
----
-
-### Passo 5 — Execute o projeto
-
-Você tem duas opções. **Recomendamos a Opção A para a primeira execução.**
-
-#### Opção A: Tudo com Docker (mais simples)
-
-Um único comando sobe o banco, a aplicação e o Adminer (interface web do banco):
-
-```bash
-docker compose -f docker/docker-compose.dev.yml up --build
-```
-
-Aguarde as mensagens de inicialização. Quando aparecer algo como:
-```
-Started MercadoApplication in X.XXX seconds
-```
-...a aplicação está pronta.
-
-#### Opção B: Banco no Docker + aplicação local (recomendado para desenvolvimento)
-
-Esta opção permite editar o código e ver as mudanças mais rápido:
-
-```bash
-# Terminal 1 — sobe o banco de dados
-docker compose -f docker/docker-compose.dev.yml up postgres adminer
-
-# Terminal 2 — roda a aplicação (em outro terminal, na mesma pasta)
-mvn spring-boot:run
-```
-
----
-
-### Passo 6 — Acesse no browser
-
-| O que | Endereço |
-|-------|----------|
-| Aplicação | http://localhost:8080 |
-| Login | usuário: `admin` / senha: `admin123` |
-| Adminer (banco) | http://localhost:8888 |
-| Health check | http://localhost:8080/actuator/health |
-
----
-
-### Parando o projeto
-
-```bash
-# Parar a aplicação: Ctrl+C no terminal onde está rodando
-
-# Parar os containers Docker:
-docker compose -f docker/docker-compose.dev.yml down
-```
-
----
-
-## Solução de Problemas Comuns
-
-### "Port 8080 already in use"
-Outra aplicação está usando a porta 8080. Para liberar:
-```bash
-# macOS / Linux
-lsof -ti:8080 | xargs kill
-
-# Windows (PowerShell)
-netstat -ano | findstr :8080
-# Anote o PID da última coluna e execute:
-taskkill /PID <número-do-pid> /F
-```
-
-### "Cannot connect to the Docker daemon"
-O Docker Desktop não está em execução. Abra o aplicativo Docker Desktop e aguarde inicializar.
-
-### "Connection refused" ao banco de dados
-O container do PostgreSQL ainda não subiu. Aguarde alguns segundos e tente novamente. Você pode verificar com:
-```bash
-docker compose -f docker/docker-compose.dev.yml ps
-# O container "mercado-postgres-dev" deve estar com status "healthy"
-```
-
-### Erro de compilação Java
-Verifique se o Java 21 está sendo usado pelo Maven:
-```bash
-mvn -version
-# A linha "Java version:" deve mostrar 21.x.x
-```
-Se mostrar outra versão, configure a variável `JAVA_HOME` apontando para o Java 21.
-
-### Flyway: "Found non-empty schema(s) with no schema history table"
-O banco existe mas foi criado sem as migrations. Apague os dados e recomece:
-```bash
-docker compose -f docker/docker-compose.dev.yml down -v
-docker compose -f docker/docker-compose.dev.yml up postgres
-```
-
----
-
-## Testes
-
-```bash
-# Rodar todos os testes (requer Docker em execução — usa Testcontainers)
-mvn test
-
-# Rodar com relatório de cobertura (JaCoCo)
-mvn verify
-# Relatório: abra o arquivo target/site/jacoco/index.html no browser
-```
-
----
-
-## Análise de Segurança (SAST)
-
-```bash
-# SpotBugs + FindSecBugs + OWASP Dependency Check
-mvn verify -Psecurity
-
-# Trivy: scan de vulnerabilidades no filesystem
-docker compose -f docker/docker-compose.dev.yml --profile scan up trivy
-
-# Verificar dependências desatualizadas
-mvn versions:display-dependency-updates -Pversions
-```
-
-Veja `docs/SECURITY.md` para detalhes.
-
----
-
-## Configurando o Deploy Automático (GitHub Actions)
-
-O projeto inclui um pipeline de CI/CD em `.github/workflows/deploy.yml` que:
-- roda os testes automaticamente a cada `push` na branch `main`
-- executa análise de segurança (SAST) no código e nas dependências
-- constrói a imagem Docker de produção e faz o deploy no servidor da disciplina
-
-Para ativar o deploy, você precisa configurar **dois secrets** e uma **variável** no seu repositório GitHub.
-
----
-
-### Secret 1 — Chave SSH de deploy (`SSH_DEPLOY_KEY`)
-
-O servidor da disciplina (`dsc.rodrigor.com`) já está preparado para receber deploys.
-A chave SSH que autoriza o acesso está disponível na página da disciplina:
-
-**Acesse: https://gd.dsc.rodrigor.com** e copie a chave SSH privada disponibilizada pelo professor.
-
-Depois, adicione no seu repositório:
-
-1. No GitHub, acesse seu repositório → **Settings**
-2. No menu lateral: **Secrets and variables → Actions**
-3. Clique em **New repository secret**
-4. Nome: `SSH_DEPLOY_KEY`
-5. Valor: cole a chave privada copiada do portal (o texto completo, incluindo as linhas `-----BEGIN...` e `-----END...`)
-6. Clique em **Add secret**
-
----
-
-### Secret 2 — Chave da API do NVD (`NVD_API_KEY`)
-
-#### O que é o NVD?
-
-**NVD** significa *National Vulnerability Database* — é o banco de dados oficial do governo americano (NIST) que cataloga todas as vulnerabilidades de segurança conhecidas em softwares. Cada vulnerabilidade recebe um identificador chamado **CVE** (ex.: CVE-2024-12345) e uma nota de gravidade chamada **CVSS** (de 0 a 10).
-
-O **OWASP Dependency Check** (uma das ferramentas de segurança do projeto) consulta esse banco para verificar se as bibliotecas que o seu projeto usa possuem vulnerabilidades conhecidas.
-
-#### Por que preciso de uma chave?
-
-Sem a chave, o download do banco de dados NVD é muito lento (pode levar 20+ minutos no CI/CD, ou até falhar por timeout). Com a chave gratuita, o download é feito via API e leva menos de 2 minutos.
-
-#### Como obter (gratuito, leva ~1 minuto)
-
-1. Acesse https://nvd.nist.gov/developers/request-an-api-key
-2. Preencha seu e-mail institucional (use o e-mail da UFPB se possível)
-3. Marque a caixa de uso não-comercial
-4. Clique em **Submit**
-5. Acesse seu e-mail — você receberá a chave em segundos
-
-#### Adicionando ao repositório
-
-1. No GitHub: **Settings → Secrets and variables → Actions**
-2. Clique em **New repository secret**
-3. Nome: `NVD_API_KEY`
-4. Valor: cole a chave recebida por e-mail
-5. Clique em **Add secret**
-
-> **Sem a chave ainda?** O pipeline funciona mesmo sem ela, mas o OWASP Dependency Check
-> pode demorar muito ou falhar por timeout. Configure assim que possível.
-
----
-
-### Variável — Nome da imagem Docker (`APP_IMAGE`)
-
-O pipeline publica a imagem Docker no GitHub Container Registry (GHCR) com o nome do seu repositório. Você não precisa configurar isso manualmente — o workflow usa `${{ github.repository }}` para montar o nome automaticamente.
-
-Mas o arquivo `.env` no servidor precisa saber qual imagem usar. O script de deploy atualiza isso automaticamente na primeira execução.
-
----
-
-### Verificando se o deploy funcionou
-
-Após configurar os secrets e fazer um `push` na branch `main`:
-
-1. No GitHub, clique na aba **Actions**
-2. Você verá o workflow **"Build & Deploy"** em execução
-3. Ele tem 3 etapas: **Testes e SAST → Build e push → Deploy em produção**
-4. Se tudo der certo, a aplicação estará disponível em `https://dsc.rodrigor.com`
-
-Se alguma etapa falhar, clique nela para ver os logs detalhados.
-
----
-
-## Estrutura do Projeto
-
-```
-base_projeto/
-├── .github/workflows/
-│   └── deploy.yml           # Pipeline CI/CD (GitHub Actions)
-├── src/main/java/br/ufpb/dsc/mercado/
-│   ├── config/              # Configurações (Security, GlobalModelAttributes, etc.)
-│   ├── controller/          # Controllers HTTP + HTMX
-│   ├── domain/              # Entidades JPA
-│   ├── dto/                 # Data Transfer Objects (Records)
-│   ├── exception/           # Exceções de domínio
-│   ├── repository/          # Interfaces Spring Data JPA
-│   └── service/             # Lógica de negócio
-├── src/main/resources/
-│   ├── db/migration/        # Scripts Flyway (V1__, V2__, ...)
-│   └── templates/           # Templates Thymeleaf
-├── docker/                  # Dockerfiles + docker-compose
-├── docs/                    # Documentação técnica
-├── CLAUDE.md                # Memória para Claude Code
-└── pom.xml
-```
-
----
-
-## Para Alunos: Adaptando o Boilerplate
-
-1. **Renomear** a entidade `Produto` para sua entidade principal
-2. **Criar migration** Flyway com a nova estrutura da tabela (`src/main/resources/db/migration/V2__...sql`)
-3. **Atualizar** Repository, Service, Controller e templates seguindo os mesmos padrões
-4. **Manter** a estrutura de pacotes e convenções (ver `docs/CONVENTIONS.md`)
-5. **Nunca editar** migrations já aplicadas — sempre criar uma nova (`V3__`, `V4__`, ...)
-
-> Dúvidas? Consulte a documentação em `docs/` ou o professor.
