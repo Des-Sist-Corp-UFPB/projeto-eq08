@@ -6,6 +6,18 @@ Plataforma SaaS modular, moderna e multitenant para Gestão de PMEs (Pequenos e 
 
 ---
 
+## 🎥 Vídeo de Apresentação do Projeto
+
+**Assista ao vídeo da apresentação final no YouTube:**
+👉 [Vídeo de Apresentação do Projeto - Gestor de Negócio PME](https://youtu.be/j37UqXbVLQY)
+
+> [!NOTE]
+> **Observações importantes para a avaliação:**
+> - O aluno Marcos não conseguiu usar a câmera pois estava sem webcam e o aplicativo para usar o celular como câmera estava dando incompatibilidade com o sistema da máquina dele.
+> - Pedimos perdão pelo vídeo não estar em tela cheia, pois o OBS Studio que foi utilizado para gravar estava bugando a resolução quando colocado em modo tela cheia.
+
+---
+
 ## Stack Tecnológica
 
 - **Backend:** Python 3.14+, FastAPI, SQLAlchemy (async), Alembic, PostgreSQL, Pytest
